@@ -31,7 +31,11 @@ protected:
 private:
 	/** reference to the data cabinet container class */
     DataCabinet *m_cabinet;
-	/** when in debugging mode, delet on close, no actions */
+    /** when doing a major update (removing old installation befor eupdate) this is true */
+    bool m_isMajorUpdate;
+    /** when doing a minor update (just updating files) this is true */
+    bool m_isMinorUpdate;
+    /** when in debugging mode, delet on close, no actions */
 	bool m_debugging;
 };
 
@@ -52,10 +56,12 @@ public slots:
     virtual bool validatePage();
 
 private:
-	QLabel *m_filename;
+    QLabel *m_filename;
 	QPushButton *m_preview;
 	QPushButton *m_fileselect;
 	QPushButton *m_create;
+    QCheckBox *m_deatailed;
+    QPlainTextEdit *m_edit;
 };
 
 #endif // WIZARD_H

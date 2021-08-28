@@ -9,6 +9,7 @@
 #include "../utilities.h" // dbgout()
 
 QString DatagramFileHandler::m_applicationPath = "/Applications";
+static bool m_debugMode = false;
 
 int DatagramFileHandler::getPropertiesFromString(QString const &str)
 {
@@ -28,7 +29,7 @@ int DatagramFileHandler::getPropertiesFromString(QString const &str)
 
 bool DatagramFileHandler::processFile(QString const &properties,QString const &destination,QDateTime const &lastModified,int attributes,int filePermissions,QByteArray const &data)
 {
-    dbgout(QString("--- processing file '")+destination+"'");
+    dbgout(QString("--- processing file '")+destination+"'",2);
 
     QString filename = destination;
     bool copyIt = false;
@@ -57,23 +58,28 @@ bool DatagramFileHandler::processFile(QString const &properties,QString const &d
                 skip = true;
 
             if( skip )
-                error = dbgout("### copying of file requires admin rights!");
+                error = dbgout("### copying of file requires admin rights!",0);
             else
             {
+                createUndo(destination);
+
+                if( m_debugMode )
+                    return false;
+
                 QStringList pathtree = filename.split("/");
                 QString actualPath = pathtree.at(0); // the first given directory must exist here!
                 for( int i=1; i<pathtree.count()-1; i++ )
                 {
                     QString testDir = actualPath+"/"+pathtree.at(i);
 
-                    dbgout(QString("    trying dir '")+testDir+"'...");
+                    dbgout(QString("    trying dir '")+testDir+"'...",2);
 
                     QDir dir(testDir);
                     if( !dir.exists() )
                     {
-                        dbgout("    ... not existant, creating it...");
+                        dbgout("    ... not existant, creating it...",2);
                         if( !QDir(actualPath).mkdir(pathtree.at(i)) )
-                            error = dbgout(QString("### can't create directory ")+actualPath+"/"+pathtree.at(i)); // error!
+                            error = dbgout(QString("### can't create directory ")+actualPath+"/"+pathtree.at(i),0); // error!
                     }
                     actualPath = testDir;
                 }
@@ -86,7 +92,7 @@ bool DatagramFileHandler::processFile(QString const &properties,QString const &d
     if( copyIt )
     {
         QByteArray uncompressed = qUncompress(data);
-        dbgout(QString("    --> now copying data of file '")+filename+"', file size is "+QString::number(uncompressed.size()));
+        dbgout(QString("    --> now copying data of file '")+filename+"', file size is "+QString::number(uncompressed.size()),2);
         QFile file(filename);
         if( file.open(QIODevice::WriteOnly) )
         {
@@ -103,10 +109,59 @@ bool DatagramFileHandler::processFile(QString const &properties,QString const &d
             file.close();
         }
         else
-           error = dbgout(QString("### can't open destintion file!")+filename); //error!
+           error = dbgout(QString("### can't open destintion file!")+filename,0); //error!
     }
     else
-        dbgout("    --> nothing to do.");
+        dbgout("    --> nothing to do.",2);
 
     return error;
+}
+
+bool DatagramFileHandler::createUndo(QString const &destination)
+{
+    QFile file(DataCabinet::getUninstallFile());
+    if( file.open(QFile::WriteOnly | QFile::Append) )
+    {
+        QString uninstallCommand = "rf:"+PathManagement::replaceSymbolicNames(destination) +"\r\n";
+        file.write(uninstallCommand.toLatin1(),uninstallCommand.length());
+        file.close();
+    }
+
+    return true;
+}
+
+bool DatagramFileHandler::processUndo(QString const &destination)
+{
+    dbgout(QString("    remove file '")+destination+"'",1);
+
+    if( m_debugMode )
+        return false;
+
+    QFile file(destination);
+    if( file.remove() )
+    {
+		QFileInfo info(destination);
+		QDir dir = info.dir();
+
+        QStringList list(dir.entryList());
+        while( list.count()<=2 )
+        {
+            QFile::remove(dir.absolutePath()+"/.DS_Store");
+            QString name = dir.dirName();
+            dir.cdUp();
+            if( !dir.rmdir(name) )
+                QMessageBox::warning(0,"dir error","directory\n"+dir.absolutePath()+"/"+name+"\nseems to have (hidden) content.");
+            else
+                list = dir.entryList();
+        }
+
+        return false;
+	}
+    else
+        return true;
+}
+
+void DatagramFileHandler::setDebugMode(bool debugging)
+{
+    m_debugMode = debugging;
 }

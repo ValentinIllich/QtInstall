@@ -1,5 +1,7 @@
+Major;Setup ID;;Minor;;
+1;22F199A0-4047-44B6-8391-6E160DA4282F;;6;;
 WindowTitle;Welcome Text (File);Completion Text (File);Lic Text File;Component(s);
-VISolutions QtInstall V1.0;This package installs the sources of the QtInstall project in the home directory of the current user.;The src package is now ready to use. Thank you for your interest in VISolutions QtInstall!;;;
+VISolutions QtInstall Sources;This package installs the sources of the QtInstall project in the home directory of the current user.;The src package is now ready to use. Thank you for your interest in VISolutions QtInstall!;;;
 Item Type;Source Path;Destination Path;Atrributes;Component(s);Target
 #;;;;;
 #;########## installing sources ##########;;;;

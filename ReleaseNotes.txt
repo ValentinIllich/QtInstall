@@ -4,6 +4,7 @@ Release 1.6:
 ============
 
 - added simple wizard for creating setup packages
+- added support for deinstallation / major updates
 
 Release 1.5:
 ============

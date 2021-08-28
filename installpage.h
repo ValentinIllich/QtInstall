@@ -21,6 +21,10 @@ public:
 private:
     DataCabinet *m_cabinet;
 
+    bool m_isRemoving;
+    bool m_isMajorUpdate;
+    bool m_isMinorUpdate;
+
     QLabel *m_label;
     QProgressBar *m_bar;
 };

@@ -12,6 +12,8 @@
 
 #define MACDESKTOP      "<HOMEDIR>/Desktop"
 
+static bool m_debugMode = false;
+
 bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties,QString const &target,QString const &iconfile,int attributes)
 {
     QString destination = PathManagement::replaceSymbolicNames(target);
@@ -23,12 +25,18 @@ bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
     bool useHelperApp = false;
     bool error = false;
 
-    dbgout(QString("--- processing link '")+destination+"' with helper '"+appname+"'");
+    if( m_debugMode )
+    {
+        if( properties!="uninstalling" ) createUndo(cmd,target);
+        return false;
+    }
+
+    dbgout(QString("--- processing link '")+destination+"' with helper '"+appname+"'",2);
 
     switch( cmd )
     {
         case eCreateStartupLink:
-            dbgout("    ...creating Startup Link");
+            dbgout("    ...creating Startup Link",1);
             useHelperApp = true;
             #if defined(Q_OS_WIN32)
             {
@@ -47,7 +55,7 @@ bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
             #endif
             break;
        case eRemoveStartupLink:
-            dbgout("    ...remove Startup Link");
+            dbgout("    ...remove Startup Link",1);
             useHelperApp = true;
             #if defined(Q_OS_WIN32)
             {
@@ -64,7 +72,7 @@ bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
             #endif
             break;
         case eCreateDesktopLink:
-            dbgout("    ...creating Desktop Link");
+            dbgout("    ...creating Desktop Link",1);
             #if defined(Q_OS_WIN32)
             {
                 useHelperApp = true;
@@ -96,7 +104,7 @@ bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
             #endif
             break;
         case eRemoveDesktopLink:
-            dbgout("    ...remove Desktop Link");
+            dbgout("    ...remove Desktop Link",1);
             #if defined(Q_OS_WIN32)
             {
                 useHelperApp = true;
@@ -123,22 +131,24 @@ bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
             break;
     }
 
+    if( properties!="uninstalling" ) createUndo(cmd,target);
+
     if( useHelperApp )
     {
         #if defined(Q_OS_WIN32)
             appname = QDir::tempPath() + "/helperapp.exe";
             if( !QFile::copy(":/helperApps/InstallHelper.exe",appname) )
-                dbgout("### cannot create helper application!");
+                dbgout("### cannot create helper application!",0);
         #endif
         #if defined(Q_OS_MAC)
             appname = QDir::tempPath() + "/helperapp";
             if( !QFile::copy(":/helperApps/SSLoginItems.bin",appname) )
-                error = dbgout("### cannot create helper application!");
+                error = dbgout("### cannot create helper application!",0);
         #endif
         if( !QFile::setPermissions(appname,	QFile::ReadOwner|QFile::ReadUser|QFile::ReadGroup|QFile::ReadOther|
                                                 QFile::WriteOwner|QFile::WriteOwner|QFile::WriteOwner|QFile::WriteOwner|
                                                 QFile::ExeOwner|QFile::ExeUser|QFile::ExeGroup|QFile::ExeOther) )
-           error =  dbgout("### permissions error on helper application!");
+           error =  dbgout("### permissions error on helper application!",0);
     }
 
     if( !appname.isEmpty() )
@@ -148,22 +158,57 @@ bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
 
         proc->start(appname, args);
         proc->waitForFinished();
-        dbgout(QString("... code, stat=")+QString::number(proc->exitCode())+"/"+QString::number(proc->exitStatus()));
+        dbgout(QString("... code, stat=")+QString::number(proc->exitCode())+"/"+QString::number(proc->exitStatus()),2);
         //Mac: code!=0 Fehler!
 
         if( proc->exitCode()!=0 )
-            error = dbgout("### helper application returned error!");
+            error = dbgout("### helper application returned error!",0);
 
         delete proc;
 
         if( useHelperApp )
         {
             if( !QFile::remove(appname) )
-                error = dbgout(QString("### cannot delete helper application ")+appname);
+                error = dbgout(QString("### cannot delete helper application ")+appname,0);
         }
     }
     else
-        dbgout("...nothing to do.");
+        dbgout("...nothing to do.",2);
 
     return error;
+}
+
+bool DatagramLinksHandler::createUndo(linkCommand cmd,QString const &target)
+{
+    QFile file(DataCabinet::getUninstallFile());
+    if( file.open(QFile::ReadOnly) )
+    {
+        QByteArray fileData = file.readAll();
+        file.close();
+
+        if( file.open(QFile::WriteOnly | QFile::Truncate) )
+        {
+            QString uninstallCommand = "";
+
+            switch( cmd )
+            {
+                case eCreateStartupLink:
+                    uninstallCommand = "sl:"+PathManagement::replaceSymbolicNames(target) +"\r\n";
+                break;
+                case eCreateDesktopLink:
+                    uninstallCommand = "dl:"+PathManagement::replaceSymbolicNames(target) +"\r\n";
+                break;
+            }
+            file.write(uninstallCommand.toLatin1(),uninstallCommand.length());
+            file.write(fileData);
+            file.close();
+        }
+    }
+
+    return true;
+}
+
+void DatagramLinksHandler::setDebugMode(bool debugging)
+{
+    m_debugMode = debugging;
 }

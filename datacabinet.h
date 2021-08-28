@@ -27,6 +27,7 @@ Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-130
 #define removeDestination       0x00000004
 
 #define settingsAppAndOrgName   0x00000001      // attributes for settingsDatagrams
+#define settingsRemoveSettings  0x00000002
 
 enum cabinetDatagramID
 {
@@ -79,6 +80,9 @@ enum PropertyID
     ePropCompletionText,
     ePropLicenceText,
     ePropComponentDefinition,
+    ePropSetupId,
+    ePropSetupMajor,
+    ePropSetupMinor,
 };
 
 class IDataProgress
@@ -111,8 +115,14 @@ public:
     bool scanSettingsDatagram(QFile &fileptr,int attributes);
     bool scanLinksDatagram(QFile &fileptr,int attributes);
 
+    void registerInstallation();
+    bool isUpdateInstallation(bool &isMajor,bool &isMinor);
+    void undoInstallation();
+
     bool hasError();
 	void setDebugMode(bool debugging);
+
+    static QString getUninstallFile();
 
 private:
     QStringList m_properties;
@@ -126,8 +136,22 @@ private:
 
     IDataProgress   *m_progressHandler;
 
+    static QString m_emptyProperty;
+    static QString m_uninstallFile;
+
     bool        m_error;
 	bool		m_debugMode;
+};
+
+class csvFile : public QFile
+{
+public:
+	csvFile(QString const &filename);
+
+	QString readCsvLine();
+
+private:
+	qint64 readCsvLineData( char * data, qint64 maxSize, bool &EOL );
 };
 
 #endif // DATACABINET_H

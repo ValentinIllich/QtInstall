@@ -7,18 +7,25 @@
 
 #include "../utilities.h" // dbgout()
 
+static bool m_debugMode = false;
+
 bool DatagramSettingsHandler::processSetting(QString const &key,QString const &properties,int attributes,QString const &value)
 {
     if( attributes==settingsAppAndOrgName )
     {
-        dbgout(QString("--- setting organization '")+key+"' and aplication '"+value+"'");
+        if( properties!="uninstalling" ) createUndo(key,attributes,value);
+
+        if( m_debugMode )
+            return false;
+
+        dbgout(QString("--- setting organization '")+key+"' and aplication '"+value+"'",1);
 
         QCoreApplication::setOrganizationName(key);
         QCoreApplication::setApplicationName(value);
     }
     else
     {
-        dbgout(QString("--- processing setting '")+key+"'");
+        dbgout(QString("--- processing setting '")+key+"'",2);
 
         QString setting = PathManagement::replaceSymbolicNames(key);
         bool specialKey = false;
@@ -38,19 +45,52 @@ bool DatagramSettingsHandler::processSetting(QString const &key,QString const &p
             specialKey = true;
         }
 
+        if( properties!="uninstalling" ) createUndo(myKey,attributes,"");
+
+        if( m_debugMode )
+            return false;
+
         if( specialKey )
         {
             setting.replace("/","\\");
             myValue.replace("/","\\");
             QSettings sett(setting,QSettings::NativeFormat);
-            sett.setValue(myKey,myValue);
+            if( attributes==settingsRemoveSettings )
+                sett.remove(myKey);
+            else
+                sett.setValue(myKey,myValue);
         }
         else
         {
             QSettings sett;
-            sett.setValue(myKey,myValue);
+            if( attributes==settingsRemoveSettings )
+                sett.remove(myKey);
+            else
+                sett.setValue(myKey,myValue);
         }
     }
 
     return false;
+}
+
+bool DatagramSettingsHandler::createUndo(QString const &key,int attributes,QString const &value)
+{
+    QFile file(DataCabinet::getUninstallFile());
+    if( file.open(QFile::WriteOnly | QFile::Append) )
+    {
+        QString uninstallCommand = "";
+        if( attributes==settingsAppAndOrgName )
+            uninstallCommand = "sa:"+key + ";" + value +"\r\n";
+        else
+            uninstallCommand = "rs:"+PathManagement::replaceSymbolicNames(key) +"\r\n";
+        file.write(uninstallCommand.toLatin1(),uninstallCommand.length());
+        file.close();
+    }
+
+    return true;
+}
+
+void DatagramSettingsHandler::setDebugMode(bool debugging)
+{
+    m_debugMode = debugging;
 }

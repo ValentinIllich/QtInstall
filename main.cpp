@@ -38,66 +38,61 @@ static char *m_argv0;
 
 static char lastbyte = 0x0;
 
-class csvFile : public QFile
+csvFile::csvFile(QString const &filename) : QFile(filename)
 {
-public:
-    csvFile(QString const &filename) : QFile(filename)
-    {
-        lastbyte = 0x0;
-    }
+	lastbyte = 0x0;
+}
 
-    QString readCsvLine()
-    {
-        char buffer[4097];
-        bool eol;
-        QString result;
-        do
-        {
-            qint64 n = readCsvLineData(buffer,4096,eol);
-            buffer[n] = 0x0;
-            result.append(buffer);
-        } while( !eol );
+QString csvFile::readCsvLine()
+{
+	char buffer[4097];
+	bool eol;
+	QString result;
+	do
+	{
+		qint64 n = readCsvLineData(buffer,4096,eol);
+		buffer[n] = 0x0;
+		result.append(buffer);
+	} while( !eol );
 
-        return result;
-    }
+	return result;
+}
 
-private:
-    qint64 readCsvLineData( char * data, qint64 maxSize, bool &EOL )
-    {
-        qint64 read = 0;
-        int count = 0;
-        EOL = false;
-        do
-        {
-            char byte;
-            if( QFile::read(&byte,1)!=1 )
-			{
-				EOL = true;			// end of file reached
-                break;
-			}
-            *(data+read)=byte;
+qint64 csvFile::readCsvLineData( char * data, qint64 maxSize, bool &EOL )
+{
+	qint64 read = 0;
+	int count = 0;
+	EOL = false;
+	do
+	{
+		char byte;
+		if( QFile::read(&byte,1)!=1 )
+		{
+			EOL = true;			// end of file reached
+			break;
+		}
+		*(data+read)=byte;
 
-            if( byte=='\"' ) count++;                               // if count of " is odd, we are inside cell definition
+		if( byte=='\"' ) count++;                               // if count of " is odd, we are inside cell definition
 
-            bool endOfLine = false;
-            if( byte=='\r' )
-                endOfLine = true;
-            else if( byte=='\n' && lastbyte!='\r' )
-                endOfLine = true;
+		bool endOfLine = false;
+		if( byte=='\r' )
+			endOfLine = true;
+		else if( byte=='\n' && lastbyte!='\r' )
+			endOfLine = true;
 
-            lastbyte = byte;
+		lastbyte = byte;
 
-            if( endOfLine )
-			{
-                if( (count%2)==0 )    // ignore newline characters enclosed in '"'
-					EOL = true; // ready with csv line
-            }
-            else if( byte!='\n' )
-                read++;
-        } while( (read<maxSize) && !EOL );
-        return read;
-    }
-};
+		if( endOfLine )
+		{
+			if( (count%2)==0 )    // ignore newline characters enclosed in '"'
+				EOL = true; // ready with csv line
+		}
+		else if( byte!='\n' )
+			read++;
+	} while( (read<maxSize) && !EOL );
+	return read;
+}
 
 QString getText(QString const &csvPath,QString const &cell)
 {
@@ -106,7 +101,7 @@ QString getText(QString const &csvPath,QString const &cell)
     if( cell.startsWith("f:") )
     {
         QString textfile = QDir::isAbsolutePath(cell.mid(2)) ? cell.mid(2) : csvPath+"/"+cell.mid(2);
-        dbgout(QString("    try opening ")+textfile);
+        dbgout(QString("    try opening ")+textfile,2);
         QFile contents(textfile);
         if( contents.open(QIODevice::ReadOnly) )
         {
@@ -144,7 +139,7 @@ void copyFileEmbedPackage(QString const &srcPath,QString const &srcFile,QString 
             int position = arr.indexOf(magic);
             if( position>0 && (arr.indexOf(magic,position+patchOffset)<=0))
             {
-				dbgout(QString("binary patch structure found at poition ")+QString::number(position)+" of file with size "+QString::number(arr.size()));
+                dbgout(QString("binary patch structure found at poition ")+QString::number(position)+" of file with size "+QString::number(arr.size()),2);
 
                 QFile datacab(package);
                 datacab.open(QIODevice::ReadOnly);
@@ -156,10 +151,10 @@ void copyFileEmbedPackage(QString const &srcPath,QString const &srcFile,QString 
                     int size = arr.size();
                     const char *bytes = (const char*)&size;
                     if( dst.write(bytes,4)!=4 )
-                        dbgout("### couldnt patch binary!");
+                        dbgout("### couldnt patch binary!",0);
                 }
                 else
-                    dbgout("### couldnt patch binary!");
+                    dbgout("### couldnt patch binary!",0);
 
                 dst.setPermissions( dst.permissions() | QFile::ExeOwner | QFile::ExeGroup | QFile::ExeUser | QFile::ExeOther );
             }
@@ -204,7 +199,7 @@ void addDirectory(DataCabinet &cab,QString const &baseDir,QString const &destina
 {
     QString myDir = actual.isNull() ? baseDir : actual;
 
-    dbgout(QString("    searching ")+myDir+"...");
+    dbgout(QString("    searching ")+myDir+"...",2);
 
     QDir dir(myDir);
     QFileInfoList list = dir.entryInfoList(QDir::Dirs | QDir::Files);
@@ -236,7 +231,7 @@ void parseRccFile(DataCabinet &cab,QString const &baseDir,QString const &rccfile
 {
     QFile file(baseDir+"/"+rccfile);
 
-    dbgout(QString("    scanning ")+rccfile+"...");
+    dbgout(QString("    scanning ")+rccfile+"...",2);
 
     if( file.open(QIODevice::ReadOnly) )
     {
@@ -257,7 +252,7 @@ void parseRccFile(DataCabinet &cab,QString const &baseDir,QString const &rccfile
         file.close();
     }
 
-    dbgout("    ...done.");
+    dbgout("    ...done.",2);
 }
 void parseQmakeProject(DataCabinet &cab,QString const &baseDir,QString const &projectfile,QString const &destinationBase)
 {
@@ -269,7 +264,7 @@ void parseQmakeProject(DataCabinet &cab,QString const &baseDir,QString const &pr
     QFile file(projBase+"/"+projFil);
     bool followup = false;
 
-    dbgout(QString("    scanning ")+projFil+"...");
+    dbgout(QString("    scanning ")+projFil+"...",2);
 
     if( file.open(QIODevice::ReadOnly) )
     {
@@ -321,7 +316,7 @@ void parseQmakeProject(DataCabinet &cab,QString const &baseDir,QString const &pr
         file.close();
     }
 
-    dbgout("    ...done.");
+    dbgout("    ...done.",2);
 }
 
 bool cretaePackage(QString const &definitionName,QString const &packageName)
@@ -336,17 +331,40 @@ bool cretaePackage(QString const &definitionName,QString const &packageName)
 
         QFileInfo info(definitionName);
 
-        // skip column description
+        // check header definition
         QString header = file.readCsvLine();
+        if( header.contains("WindowTitle") )
+        {
+            // old version: UUID, version etc not given
+            cab.setProperty(ePropSetupId,"88C45A0C-39E4-4EC8-9A47-8A75AE5120CD");
+            cab.setProperty(ePropSetupMajor,"0");
+            cab.setProperty(ePropSetupMinor,"0");
+        }
+        else
+        {
+            // new version: extended csv format
+            QString input = file.readCsvLine();
+            QStringList specs = input.remove("\"").split(";");
+
+            cab.setProperty(ePropSetupId,specs.at(1));
+            cab.setProperty(ePropSetupMajor,specs.at(0));
+            cab.setProperty(ePropSetupMinor,specs.at(3));
+
+            // skip column description
+            file.readCsvLine();
+        }
 
         // read header definition
         QString input = file.readCsvLine();
         QStringList headers = input.remove("\"").split(";");
-        dbgout(QString("Window  Title: ")+headers.at(0));
-        dbgout(QString("Welcome  Text: ")+headers.at(1));
-        dbgout(QString("  Setup Comp.: ")+headers.at(2));
-        dbgout(QString("License  Text: ")+headers.at(3));
-        dbgout(QString("Complete Text: ")+headers.at(4));
+        dbgout(QString("  Setup  UUID: ")+cab.getProperty(ePropSetupId),1);
+        dbgout(QString("  Setup Major: ")+cab.getProperty(ePropSetupMajor),1);
+        dbgout(QString("  Setup Minor: ")+cab.getProperty(ePropSetupMinor),1);
+        dbgout(QString("Window  Title: ")+headers.at(0),1);
+        dbgout(QString("Welcome  Text: ")+headers.at(1),1);
+        dbgout(QString("  Setup Comp.: ")+headers.at(2),1);
+        dbgout(QString("License  Text: ")+headers.at(3),1);
+        dbgout(QString("Complete Text: ")+headers.at(4),1);
 
         cab.setProperty(ePropWindowTitle,getText(info.dir().path(),headers.at(0))); // Fenstername
         cab.setProperty(ePropWelcomeText,getText(info.dir().path(),headers.at(1))); // Text für Willkommensseite
@@ -418,10 +436,10 @@ bool cretaePackage(QString const &definitionName,QString const &packageName)
                         parseQmakeProject(cab,info.dir().path(),cells.at(1),cells.at(2));
                     }
                     else
-                        dbgout(QString("... unrecognized package code: '")+cells.at(0)+"'...");
+                        dbgout(QString("#### unrecognized package code: '")+cells.at(0)+"'...",0);
                 }
                 else
-                    dbgout(QString("... skipping '")+input.simplified()+"'...");
+                    dbgout(QString("... skipping '")+input.simplified()+"'...",2);
             }
         }
         cab.closeFile();
@@ -431,7 +449,7 @@ bool cretaePackage(QString const &definitionName,QString const &packageName)
 		ret = true;
     }
 	else
-		dbgout(QString("file not found: '")+definitionName.simplified()+"'.");
+        dbgout(QString("#### file not found: '")+definitionName.simplified()+"'.",0);
 
 	return ret;
 }
@@ -553,13 +571,13 @@ int main(int argc, char *argv[])
         {
             // do the installation
             DataCabinet cab;
-            Wizard w(&cab);
 
             int fileOffset = patchInformation.fileOffset;
 
             if( cab.openFile(selectedPackage,fileOffset) )
             {
-                w.setWindowTitle(cab.getProperty(ePropWindowTitle));
+                Wizard w(&cab);
+                w.setWindowTitle(cab.getProperty(ePropWindowTitle)+" V"+cab.getProperty(ePropSetupMajor)+"."+cab.getProperty(ePropSetupMinor));
                 w.show();
                 w.exec();
             }

@@ -24,6 +24,7 @@ ConfigPage::ConfigPage()
     m_filename = new QLabel("<none>");
 //    m_filename->setAlignment(Qt::AlignRight);
     m_preview = new QPushButton("Preview package...");
+    m_deatailed = new QCheckBox("detailed logging");
     m_fileselect = new QPushButton("Definition file...");
 	m_create = new QPushButton("Create package...");
 
@@ -38,14 +39,14 @@ ConfigPage::ConfigPage()
 
     QHBoxLayout *row2 = new QHBoxLayout;
      row2->addWidget(m_preview);
+     row2->addWidget(m_deatailed);
      row2->addWidget(new QLabel(""),1);
 	 row2->addWidget(m_create);
 
-     QPlainTextEdit *m_edit = new QPlainTextEdit();
+     m_edit = new QPlainTextEdit();
      m_edit->setReadOnly(true);
 	 m_edit->setLineWrapMode(QPlainTextEdit::NoWrap);
 	 //m_edit->setFrameStyle(QFrame::NoFrame);
-	 setDbgWindow(m_edit);
 
      layout->addLayout(row1);
      layout->addLayout(row2);
@@ -82,22 +83,26 @@ void ConfigPage::selectFile()
 }
 void ConfigPage::create()
 {
-	createSetup(m_filename->text());
+    m_edit->clear();
+    setDbgWindow(m_edit,1);
+    createSetup(m_filename->text());
 }
 
 void ConfigPage::showPreview()
 {
-	if( cretaePackage(m_filename->text(),"temp.qip") )
+    m_edit->clear();
+    setDbgWindow(m_edit,m_deatailed->isChecked() ? 3: 1);
+    if( cretaePackage(m_filename->text(),"temp.qip") )
 	{
 		DataCabinet *cab = new DataCabinet;
-		Wizard *w = new Wizard(cab);
-		w->setDebugMode(true);
 
 		int fileOffset = 0;
 
 		if( cab->openFile("temp.qip",fileOffset) )
 		{
-			w->setWindowTitle(cab->getProperty(ePropWindowTitle));
+            Wizard *w = new Wizard(cab);
+            w->setWindowTitle(cab->getProperty(ePropWindowTitle)+" V"+cab->getProperty(ePropSetupMajor)+"."+cab->getProperty(ePropSetupMinor));
+            w->setDebugMode(true);
 			connect(w,SIGNAL(accepted()),w,SLOT(deleteLater()));
 			connect(w,SIGNAL(rejected()),w,SLOT(deleteLater()));
 			w->show();
@@ -110,13 +115,20 @@ void ConfigPage::showPreview()
 Wizard::Wizard(DataCabinet *cab,QWidget *parent)
     : QWizard(parent)
     , m_cabinet(cab)
+    , m_isMajorUpdate(false)
+    , m_isMinorUpdate(false)
 	, m_debugging(false)
 {
     if( cab!=NULL )
     {
-        addPage(new WelcomePage(m_cabinet));
-        if( !m_cabinet->getProperty(ePropLicenceText).isEmpty() )
-            addPage(new LicensePage(m_cabinet));
+        cab->isUpdateInstallation(m_isMajorUpdate,m_isMinorUpdate);
+
+        if( m_isMajorUpdate || m_isMinorUpdate )
+        {
+            addPage(new WelcomePage(m_cabinet));
+            if( !m_cabinet->getProperty(ePropLicenceText).isEmpty() )
+                addPage(new LicensePage(m_cabinet));
+        }
         addPage(new InstallPage(m_cabinet));
         addPage(new CompletePage(m_cabinet));
     }

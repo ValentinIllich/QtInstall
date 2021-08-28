@@ -8,8 +8,12 @@
 
 CompletePage::CompletePage(DataCabinet *cab)
     : m_cabinet(cab)
+    , m_isMajorUpdate(false)
+    , m_isMinorUpdate(false)
 {
-    m_label = new QLabel("The installation has succesfully completed.");
+    cab->isUpdateInstallation(m_isMajorUpdate,m_isMinorUpdate);
+
+    m_label = new QLabel();
     m_label->setWordWrap(true);
 
     QVBoxLayout *layout = new QVBoxLayout;
@@ -23,7 +27,10 @@ void CompletePage::initializePage()
 
     if( m_cabinet->hasError() )
     {
-        setTitle("Installation Failed!");
+        if( m_isMajorUpdate || m_isMinorUpdate )
+            setTitle("Installation Failed!");
+        else
+            setTitle("Removing Software Failed!");
 
         m_label->setText("The installation failed for some reason. Please see the Log or contact the manufacturer of this package.");
         setButtonText(QWizard::CustomButton1,"Show Log");
@@ -39,12 +46,21 @@ void CompletePage::initializePage()
     }
     else
     {
-        setTitle("Installation Finished");
+        if( m_isMajorUpdate || m_isMinorUpdate )
+        {
+            setTitle("Installation Finished");
 
-        if( text.isEmpty() )
-            m_label->setText("the installation has succesfully finished.");
+            if( text.isEmpty() )
+                m_label->setText("the installation has succesfully been completed.");
+            else
+                m_label->setText(text);
+        }
         else
-            m_label->setText(text);
+        {
+            setTitle("Removing Software Finished");
+            m_label->setText("The installation has succesfully been removed.");
+        }
+
     }
 }
 
