@@ -3,6 +3,8 @@
 
 #include <QWizardPage>
 #include <QLabel>
+#include <QCheckBox>
+#include <QRadioButton>
 #include <QProgressBar>
 
 #include "datacabinet.h"
@@ -26,6 +28,9 @@ private:
     bool m_isMinorUpdate;
 
     QLabel *m_label;
+    QCheckBox *m_box;
+    QRadioButton *m_rb1;
+    QRadioButton *m_rb2;
     QProgressBar *m_bar;
 };
 

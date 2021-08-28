@@ -30,7 +30,7 @@ void CompletePage::initializePage()
         if( m_isMajorUpdate || m_isMinorUpdate )
             setTitle("Installation Failed!");
         else
-            setTitle("Removing Software Failed!");
+            setTitle("Software Modification Failed!");
 
         m_label->setText("The installation failed for some reason. Please see the Log or contact the manufacturer of this package.");
         setButtonText(QWizard::CustomButton1,"Show Log");
@@ -40,9 +40,17 @@ void CompletePage::initializePage()
             QMessageBox::critical(this,"installation error",QString("The installation failed for following reason:\n")
                                   +getErrorMessage()+"For details, please click on 'Show Log'.");
         else
-            QMessageBox::critical(this,"installation error",QString("Not all parts of this package could be installed. ")
-                                  +"Probably you will need to repeat the installation with administrator rights.\n"
+        {
+            if( m_isMajorUpdate || m_isMinorUpdate )
+                QMessageBox::critical(this,"installation error",QString("Not all parts of this package could be installed. ")
+                                  +"Probably you will need to do the installation with administrator rights first.\n"
+                                      +"Then you shoud execute the installer again and perform a maintenance repair.\n"
                                   +"For details, please click on 'Show Log'.");
+            else
+                QMessageBox::critical(this,"modification error",QString("Not all parts of this package could be removed. ")
+                                  +"Probably you will need to repeat the uninstall process with administrator rights.\n"
+                                  +"For details, please click on 'Show Log'.");
+        }
     }
     else
     {
@@ -57,8 +65,8 @@ void CompletePage::initializePage()
         }
         else
         {
-            setTitle("Removing Software Finished");
-            m_label->setText("The installation has succesfully been removed.");
+            setTitle("Software Modification Finished");
+            m_label->setText("the installation has succesfully been modified.");
         }
 
     }

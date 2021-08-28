@@ -1,4 +1,16 @@
-QtInstall Release Notes (C) Valentin Illich 2009/2010
+QtInstall Release Notes (C) Valentin Illich 2009-2013
+
+Release 1.8:
+============
+
+- showing GPL license notice only on first execution of wizard
+- added repair functionality
+- recognizing missing access rights upon installation; providing execution with elevated rights
+
+Release 1.7:
+============
+
+- recognizing shared files with other QtInstall projects, not removing them
 
 Release 1.6:
 ============

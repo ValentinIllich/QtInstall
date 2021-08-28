@@ -20,7 +20,7 @@ Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-130
 #include <QStringList>
 #include <QFile>
 
-#define QtInstallVersion        "1.6"
+#define QtInstallVersion        "1.8"
 
 #define useFilePermissions      0x00000001      // attributes for fileDatagrams
 #define executablePermission    0x00000002
@@ -28,6 +28,10 @@ Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-130
 
 #define settingsAppAndOrgName   0x00000001      // attributes for settingsDatagrams
 #define settingsRemoveSettings  0x00000002
+
+#define checkPackageID          0x00000001      // control flags for shared file registration
+#define insertPackageID         0x00000002      // control flags for shared file registration
+#define removePackageID         0x00000003      // control flags for shared file registration
 
 enum cabinetDatagramID
 {

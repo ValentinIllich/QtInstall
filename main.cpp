@@ -12,6 +12,8 @@
 
 #include "../utilities.h"
 
+extern "C" int getAdminRights(int argc, char* argv[]);
+
 //  the magic pattern which is used to find the correct position in the compiled executable to patch in the offset of the cabinet data is
 //  defined in four parts. There may exist only one position in the whole source where these parts are concatenated - namely in the initialization
 //  of the patch structrue. The check for the correct value during runtime as like as the search for the pattern inside the executable (when
@@ -336,7 +338,7 @@ bool cretaePackage(QString const &definitionName,QString const &packageName)
         if( header.contains("WindowTitle") )
         {
             // old version: UUID, version etc not given
-            cab.setProperty(ePropSetupId,"88C45A0C-39E4-4EC8-9A47-8A75AE5120CD");
+            cab.setProperty(ePropSetupId,definitionName/*"88C45A0C-39E4-4EC8-9A47-8A75AE5120CD"*/);
             cab.setProperty(ePropSetupMajor,"0");
             cab.setProperty(ePropSetupMinor,"0");
         }
@@ -380,7 +382,11 @@ bool cretaePackage(QString const &definitionName,QString const &packageName)
         target = "mac";
 #endif
 
-        cab.createFile(packageName);
+        if( !cab.createFile(packageName) )
+        {
+            file.close();
+            return false;
+        }
 
         // skip column description
         file.readCsvLine();
@@ -551,6 +557,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    bool tryAdmin = false;
+
     if( installingPackage )
     {
         // we want to install a package from given file
@@ -561,9 +569,9 @@ int main(int argc, char *argv[])
             QStringList filter; filter << "*.qip";
             QStringList found = actual.entryList(filter);
 
-            if( found.isEmpty() || found.count()>1 )
+            if( found.count()>1 )
                 selectedPackage = QFileDialog::getOpenFileName(0,"Select Installation Package","","QtInstall Files (*.qip)"/*,0,QFileDialog::DontUseNativeDialog*/);
-            else
+            else if( found.count()==1 )
                 selectedPackage = found.at(0);
         }
 
@@ -580,6 +588,9 @@ int main(int argc, char *argv[])
                 w.setWindowTitle(cab.getProperty(ePropWindowTitle)+" V"+cab.getProperty(ePropSetupMajor)+"."+cab.getProperty(ePropSetupMinor));
                 w.show();
                 w.exec();
+
+                if( cab.hasError() )
+                    tryAdmin = true;
             }
         }
         else
@@ -598,4 +609,11 @@ int main(int argc, char *argv[])
 
     if( dbgVisible() )
         return a.exec();
+
+    if( tryAdmin )
+    {
+        if( QMessageBox::question(0,"admin access needed","Do you want to restart the installer as administrator ?",
+                                  QMessageBox::Yes | QMessageBox::No)==QMessageBox::Yes )
+            getAdminRights(argc,argv);
+    }
 }

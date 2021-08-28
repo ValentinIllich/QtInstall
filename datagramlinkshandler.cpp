@@ -28,7 +28,7 @@ bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
     if( m_debugMode )
     {
         if( properties!="uninstalling" ) createUndo(cmd,target);
-        return false;
+        //return false;
     }
 
     dbgout(QString("--- processing link '")+destination+"' with helper '"+appname+"'",2);

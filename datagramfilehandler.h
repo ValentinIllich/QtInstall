@@ -8,10 +8,10 @@ class DatagramFileHandler
 {
 public:
     static int getPropertiesFromString(QString const &str);
-    static bool processFile(QString const &properties,QString const &destination,QDateTime const &lastModified,int attributes,int filePermissions,QByteArray const &data);
+    static bool processFile(QString const &packageID,QString const &properties,QString const &destination,QDateTime const &lastModified,int attributes,int filePermissions,QByteArray const &data);
     static bool createUndo(QString const &destination);
 
-	static bool processUndo(QString const &destination);
+  static bool processUndo(QString const &packageID,QString const &destination);
 
     static void setDebugMode(bool debugging);
 
