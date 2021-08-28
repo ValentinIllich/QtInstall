@@ -136,7 +136,7 @@ private:
 
     int         m_iElementCount;
     int         m_iCabinetVersion;
-    int         m_iElementScanned;
+//    int         m_iElementScanned;
 
     IDataProgress   *m_progressHandler;
 

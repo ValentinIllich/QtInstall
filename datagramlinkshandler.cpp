@@ -198,6 +198,8 @@ bool DatagramLinksHandler::createUndo(linkCommand cmd,QString const &target)
                 case eCreateDesktopLink:
                     uninstallCommand = "dl:"+PathManagement::replaceSymbolicNames(target) +"\r\n";
                 break;
+            default:
+              break;
             }
             file.write(uninstallCommand.toLatin1(),uninstallCommand.length());
             file.write(fileData);

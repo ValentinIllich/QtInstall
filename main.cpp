@@ -499,7 +499,11 @@ void createSetup(QString const &definitionName)
 		{
 			if( createEmbedded )
 			{
-				cretaePackage(definitionName,"temp.qip");
+        QString temp = QDir::tempPath();
+        if( !temp.endsWith("/") ) temp += "/";
+        temp += "temp.qip";
+
+        cretaePackage(definitionName,temp);
 
 #ifdef Q_OS_WIN32
 				QString myOwnApp = m_argv0;
@@ -510,9 +514,9 @@ void createSetup(QString const &definitionName)
 
 				QString myOwnApp = QString(m_argv0).remove("/Contents/MacOS/QtInstall");
 #endif
-				copyApplication(myOwnApp,packageName,"temp.qip");
+        copyApplication(myOwnApp,packageName,temp);
 
-				QFile::remove("temp.qip");
+        QFile::remove(temp);
 			}
 			else
 				cretaePackage(definitionName,packageName);

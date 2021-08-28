@@ -92,13 +92,18 @@ void ConfigPage::showPreview()
 {
   m_edit->clear();
   setDbgWindow(m_edit,m_deatailed->isChecked() ? 3: 1);
-  if( cretaePackage(m_filename->text(),"temp.qip") )
+
+  QString temp = QDir::tempPath();
+  if( !temp.endsWith("/") ) temp += "/";
+  temp += "temp.qip";
+
+  if( cretaePackage(m_filename->text(),temp) )
   {
     DataCabinet *cab = new DataCabinet;
 
     int fileOffset = 0;
 
-    if( cab->openFile("temp.qip",fileOffset) )
+    if( cab->openFile(temp,fileOffset) )
     {
       Wizard *w = new Wizard(cab);
       w->setWindowTitle(cab->getProperty(ePropWindowTitle)+" V"+cab->getProperty(ePropSetupMajor)+"."+cab->getProperty(ePropSetupMinor));
@@ -107,6 +112,8 @@ void ConfigPage::showPreview()
       connect(w,SIGNAL(rejected()),w,SLOT(deleteLater()));
       w->show();
     }
+
+    QFile::remove(temp);
   }
 }
 

@@ -19,7 +19,7 @@ public:
 private:
     DataCabinet *m_cabinet;
 
-    QLabel *m_label;
+//    QLabel *m_label;
     QTextEdit *m_edit;
 };
 
