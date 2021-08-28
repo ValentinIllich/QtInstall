@@ -1,0 +1,276 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf350
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\froman\fcharset0 Palatino-Roman;\f2\fmodern\fcharset0 CourierNewPSMT;
+\f3\fnil\fcharset0 LucidaGrande;\f4\fnil\fcharset0 Monaco;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue255;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid2}
+{\list\listtemplateid3\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid201\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid3}
+{\list\listtemplateid4\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid301\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid4}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}{\listoverride\listid3\listoverridecount0\ls3}{\listoverride\listid4\listoverridecount0\ls4}}
+\vieww19940\viewh17320\viewkind0
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+
+\f0\b\fs28 \cf0 UUID Generator\
+
+\fs24 Author:	John C. Daub, Hsoi Enterprises LLC\
+Email:	{\field{\*\fldinst{HYPERLINK "mailto:info@hsoienterprises.com"}}{\fldrslt info@hsoienterprises.com}}\
+Web:	{\field{\*\fldinst{HYPERLINK "http://www.hsoienterprises.com/"}}{\fldrslt http://www.hsoienterprises.com/}}\
+Date:	6 March 2011\
+\
+\
+
+\fs28 What is this?\
+
+\fs24 \
+UUID Generator
+\b0  is a free and simple Mac OS X application for generating UUIDs (Universally Unique Identifiers). It facilitates generation of UUIDs \'97 by your choice of time/Ethernet-based or pure random number algorithms \'97 and placing the UUID into forms and locations suitable for use in software development or any other place a UUID would be needed.\
+\
+\
+
+\b\fs28 What's new this version?\
+
+\fs24 \
+
+\b0 The current version is 1.1.1\
+\
+\pard\tx220\tx720\tx1440\tx2880\tx4320\tx5760\tx7200\li720\fi-720\ql\qnatural
+\ls1\ilvl0\cf0 {\listtext	\'95	}Hsoi's Shop has closed up shop, thus all assets have transferred to Hsoi Enterprises LLC, including UUID Generator.\
+{\listtext	\'95	}Updated the code to reflect new ownership.\
+{\listtext	\'95	}Updated to Xcode 3.2.5.\
+{\listtext	\'95	}Updated to work with Mac OS X 10.6's Services architecture. The minimum OS is now Mac OS X 10.5.\
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \
+\
+
+\b\fs28 What's a UUID?\
+
+\b0\fs24 \
+From Apple Computer's developer documentation at:\
+\
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+{\field{\*\fldinst{HYPERLINK "http://developer.apple.com/library/mac/#documentation/CoreFoundation/Reference/CFUUIDRef/Reference/reference.html"}}{\fldrslt \cf2 http://developer.apple.com/library/mac/#documentation/CoreFoundation/Reference/CFUUIDRef/Reference/reference.html}}\cf2 \
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+
+\f1 \cf0 UUIDs (Universally Unique Identifiers), also known as GUIDs (Globally Unique Identifiers) or IIDs (Interface Identifiers), are 128-bit values guaranteed to be unique. A UUID is made unique over both space and time by combining a value unique to the computer on which it was generated \'97 usually the Ethernet hardware address \'97 and a value representing the number of 100-nanosecond intervals since October 15, 1582 at 00:00:00.\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+\cf0 The standard format for UUIDs represented in ASCII is a string punctuated by hyphens, for example 
+\f2 68753A44-4D6F-1226-9C60-0050E4C00067
+\f1  . The hex representation looks, as you might expect, like a list of numerical values preceded by 
+\f2 0x
+\f1  . For example, 
+\f2 0xD7, 0x36, 0x95, 0x0A, 0x4D, 0x6E, 0x12, 0x26, 0x80, 0x3A, 0x00, 0x50, 0xE4, 0xC0, 0x00, 0x67
+\f1  . To use a UUID, you simply create it and then copy the resulting strings into your header and C language source files. Because a UUID is expressed simply as an array of bytes, there are no endianness considerations for different platforms.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f0 \cf0 \
+\
+UUID Generator is a tool aimed to help developers and other people that need a simple and fast facility for generating UUIDs. It generates UUIDs by your choice of generation algorithms, and outputs the UUIDs to multiple locations in multiple formats \'97 whatever you may need. Furthermore, UUID Generator provides UUID generation as a Service for quick and easy access to UUIDs from whatever editing environment you may be in, e.g. Xcode, BBEdit.\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b\fs28 \cf0 How do I use UUID Generator?\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\fs24 \cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b0 \cf0 Minimum system requirements:\
+\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+\ls2\ilvl0\cf0 {\listtext	\'95	}Universal Binary (PowerPC-based and Intel-based)\
+{\listtext	\'95	}Mac OS X 10.5 or higher\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+\cf0 \
+When UUID Generator launches, it will generate a UUID. This UUID is then formatted and output to your desired location. How the UUID string is generated, formatted, and where it is output to are configurable Preferences.\
+\
+In the GUI:\
+\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+\ls3\ilvl0\cf0 {\listtext	\'95	}Clicking 
+\f3\fs26 Generate UUID 
+\f0\fs24 will generate a new UUID, displaying it in the text field. The text is read-only: you can copy it, drag it, but cannot edit it.\
+{\listtext	\'95	}Clicking 
+\f3\fs26 Copy & Quit 
+\f0\fs24 will copy the currently displayed UUID to the Clipboard, then quit UUID Generator.\
+{\listtext	\'95	}You can create new output windows by selecting 
+\f3\fs26 New UUID Window
+\f0\fs24  from the 
+\f3\fs26 File
+\f0\fs24  menu.\
+{\listtext	\'95	}You can view the online help (currently this file) from the 
+\f3\fs26 Help
+\f0\fs24  menu. Use the 
+\f3\fs26 Save As...
+\f0\fs24  command to save the contents of the Help window to an RTF file.\
+{\listtext	\'95	}Selecting 
+\f3\fs26 Preferences 
+\f0\fs24 from the Application menu will display the Preferences dialog.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+\cf0 \
+\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+\ls4\ilvl0\cf0 The general workflow for the application is to launch the app, then press the <RETURN> key to Copy & Quit. Quick generation of the UUID, placing it in the form you want in the\
+location you want.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+\cf0 \
+UUID generation is also available as a Service. This allows direct access to UUID generation from within your favorite text editor, such as Xcode or BBEdit. See your system's Help for more information about Services.\
+\
+As of version 1.1, there is also a command line tool \'97\'a0huuidgen. The tool is located within the UUID Generator.app package. The tool is not installed (e.g. into /usr/bin) nor is it directly used by UUID Generator; it's just something I did. It provides the same sort of functionality of UUID Generator.app, just in a command-line tool form. It strives for "feature parity" with uuidgen implementations (e.g. -r and -t switches are honored), but goes beyond and offers all the same functionality of the graphical UUID Generator.app. Again, it's not installed anywhere, but you're welcome to use it. For usage instructions try "huuidgen --help".\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b\fs28 \cf0 Preferences\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b0\fs24 \cf0 \
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \ul \ulc0 What to output\ulnone \
+The following options control how the UUID is formatted when output:\
+\pard\tx740\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \
+\pard\tx360\tx740\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \'95	String \'97 output the raw UUID as a string:\
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\li1460\fi-1460\ql\qnatural
+\cf0 	UUID Generator, Oct 22 09:44:38: the generated UUID is -- CA77B528-E5CC-11D6-B898-0030654120A4\
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \
+\
+\pard\tx360\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \'95 	Bytes \'97 output the UUID by individual bytes:\
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\li1440\fi-1440\ql\qnatural
+\cf0 	UUID Generator, Oct 22 09:44:38: the UUID bytes are -- \{0xCA,0x77,0xB5,0x28,0xE5,0xCC,0x11,0xD6,0xB8,0x98,0x00,0x30,0x65,0x41,0x20,0xA4\}.\
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \
+\
+\pard\tx360\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \'95	CMPlugInFactoryID \'97 output as a #define ready for pasting into your .plugin's source code. All you need to do is replace the "YOUR_CMPLUGINFACTORYID" with your own symbolic constant:\
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\li1440\fi-1440\ql\qnatural
+\cf0 	UUID Generator, Oct 22 09:44:38: CMPluginFactoryID -- \
+	#define YOUR_CMPLUGINFACTORYID	( CFUUIDGetConstantUUIDWithBytes( NULL,0xCA,0x77,0xB5,0x28,0xE5,0xCC,0x11,0xD6,0xB8,0x98,0x00,0x30,0x65,0x41,0x20,0xA4 ) )\
+					/*CA77B528-E5CC-11D6-B898-0030654120A4*/\
+\pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 \
+It is important to note that when the output goes to stdout, the application and time stamp is present. However, when the output goes to the Clipboard, only the UUID itself is output.\
+\
+\
+\ul Where to output\ulnone \
+The following options control where the output is directed:\
+\
+\pard\tx360\tx1440\tx2880\tx4320\tx5760\tx7200\li360\fi-360\ql\qnatural
+\cf0 \'95	stdout \'97 the output is directed to stdout, so you'll see it displayed in the Console.app's console.log (with time stamp).\
+\'95	Clipboard \'97 the output is placed on the Clipboard, ready for pasting into your application (without time stamp).\
+\
+\
+\ul UUID Generation Style\ulnone \
+This controls the algorithm style used to generate the UUID.\
+\
+\'95	CFUUID \'97 uses the Apple Core Foundation CFUUID algorithm, which is time/Ethernet MAC address based.\
+\'95	e2fsprogs \'97 uses the e2fsprogs library uuid_generate() algorithm, which prefers a pure random approach to generation falling back to time/Ethernet MAC address if pure random is not available.\
+\'95	e2fsprogs - force random \'97 uses the e2fsprogs library uuid_generate_random() algorithm, which forces the use of the all-random UUID format, even if a high-quality random number generator (i.e. /dev/urandom) is not available, in which case a pseudo-random generator will be substituted. Note that the use of a pseudo-random generator may compromise the uniqueness of UUID's generated in this fashion.\
+\'95	e2fsprogs - force time \'97 uses the e2fsprogs library uuid_generate_time() algorithm, which forces the use of the alternative algorithm which uses the current time and the local ethernet MAC address (if available). This algorithm used to be the default one used to generate UUID, but because of the use of the ethernet MAC address, it can leak information about when and where the UUID was generated. This can cause privacy problems in some applications, so the uuid_generate() function only uses this algorithm if a high-quality source of randomness is not available.\
+\
+\pard\tx360\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
+\cf0 It should be noted that on Mac OS X 10.4, the /dev/urandom generator is available. Unless you have a need to force a particular generation style, it's probably best to go with the CFUUID or e2fsprogs style.\
+\pard\tx360\tx1440\tx2880\tx4320\tx5760\tx7200\li360\fi-360\ql\qnatural
+\cf0 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b \cf0 \
+\
+
+\fs28 What's the license/use policy? Is there a cost for this product?\
+
+\fs24 \
+
+\b0 UUID Generator is free for use by the public \'97 just be respectful of others, and responsible for yourself. \
+\
+The software is provided "AS IS" and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.\
+\
+Note the UUID generation algorithms are the product of others. As of this writing you can find the source for CFUUID in Apple, Inc's Darwin project:\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+{\field{\*\fldinst{HYPERLINK "http://www.opensource.apple.com/darwinsource/10.4.9.ppc/CF-368.28/Base.subproj/CFUUID.c"}}{\fldrslt 
+\f4\fs20 \cf2 \ul \ulc2 http://www.opensource.apple.com/darwinsource/10.4.9.ppc/CF-368.28/Base.subproj/CFUUID.c}}
+\f4\fs20 \cf2 \ul \ulc2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+{\field{\*\fldinst{HYPERLINK "http://www.opensource.apple.com/darwinsource/10.4.9.ppc/CF-368.28/Base.subproj/uuid.c"}}{\fldrslt \cf2 http://www.opensource.apple.com/darwinsource/10.4.9.ppc/CF-368.28/Base.subproj/uuid.c}}
+\f0\fs24 \cf0 \ulnone \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+\cf0 \
+And e2fsprogs can be found:\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural\pardirnatural
+{\field{\*\fldinst{HYPERLINK "http://e2fsprogs.sourceforge.net/"}}{\fldrslt 
+\f4\fs20 \cf2 \ul http://e2fsprogs.sourceforge.net/}}\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+\cf0 \
+If you find bugs in UUID Generator, please report them. Bugs or issues about the specific UUID generation algorithms should be directed to the authors of those algorithms; once they fix them and they are integrated into Mac OS X, UUID Generator will pick up those fixes. If you have feature requests, please tell me. Thanx for using my software.\
+\
+UUID Generator is Copyright \'a92001-2011 Hsoi Enterprises LLC. All rights reserved.\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b\fs28 \cf0 What is this application? What does it do? Why did you write it?\
+
+\fs24 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b0 \cf0 I wrote this application because I am writing software for Mac OS X, specifically contextual menu plugins (which you can find at my web site, <http://www.hsoi.com/hsoishop/software/>). To write a contextual menu plugin for Mac OS X (at least as of this writing), you will utilize the CFPlugIn interface (part of Core Foundation, callable from both Cocoa and Carbon API's, however due to the nature of the beast it's a Mac OS X only thing).\
+\
+When you write a CFPlugIn, you need a UUID to give your plugin a (universally) unique signature. Since I am going to be writing a bunch of plugins (and I see how many people are requesting info about CMPlugins under Mac OS X on the developer mailing lists), I figure there'll be a lot of UUID generation going on soon. So, why not hack something up in a few hours using Cocoa and save some time and trouble in the long run. And here we are.\
+\
+Of course, after writing this, Apple released their uuidgen command line tool. While that certainly has its place, UUID Generator provides UUID generation via a GUI, a Service, and in various convenient formats.\
+\
+\
+I found that for such a simple little app I  learned a lot (it's my first publicly released Cocoa app). This little project has actually enabled me to learn a lot about Cocoa and some important things like reading and writing files (NSFileWrapper), dealing with your app's bundle (NSBundle), using strings (NSString, NSAttributedString, NSLocalizedString), working with RTF and NSText's support for it, working with Project Builder and Interface Builder... getting one step closer to "getting it" on the whole Cocoa level. It's been quite an enriching experience for me. :-)\
+\
+\
+Update 19 October 2007 \'96 I revisited the application. I needed a lot of UUIDs for a project I was working on and that led me to add a command-key shortcut to the "Generate UUID" Service. Shortly thereafter I was contacted by a J.R. Harvey asking about UUID generation algorithms, and he pointed me to the e2fsprogs project. So why not, I opted to rev the application (thus the 1.1 release).\
+\
+Looking back on this code, I'm not exactly proud of it. :-)  The code in this project isn't the worst, but it's not the best. But again, it was over 6 years ago and was my first Cocoa application; it was my place to cut my teeth. I realize it was a mistake to make it a document-based app. I did like the Preferences approach, since that was before the days of Cocoa-bindings (no, it wasn't worth my time to rewrite everything, tho the bindings could be fast and easy to do).\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b\fs28 \cf0 \
+Futures\
+
+\fs24 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b0 \cf0 These are things that I've thought about doing to UUID in the future. This doesn't mean I will do them, just some things I've thought about.\
+\
+- Auto-quit (settable as a Preference). This way you launch, UUID is generated, Copy & Quit, all in one shot.
+\b \
+
+\b0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b\fs28 \cf0 Version History\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\b0\fs24 \cf0 \
+1.0a1	Hsoi		29 Aug 2001\
+First "release" (to just one person). \
+\
+1.0b1	Hsoi		01 Sep  2001\
+Public release of app via hsoi.com. Added output (UUID string and individual bytes in hex) to stdout. Created a little UUID class to make UUID handling/generation easier (instead of using Listing 1-12 straight). Created ReadMe file and Help facilities. Localizable.strings.\
+\
+1.0b2	Hsoi		22 Oct 2002\
+Been too long. I'm going to work on my contextual menu .plugins, I want to make my life regarding generating UUIDs for a specific purpose (writing contextual menu plugins) as simple as possible. Added Preferences. Added the CFPlugInFactoryID format. Added Service support. Tweaked the output so stdout gets timestamp, Clipboard just get the UUID data. Built with Project Builder 2.0.1 and gave a minimum OS of Mac OS X 10.2.1\
+\
+1.1		Hsoi		19 Oct 2007\
+Other means of UUID generation were brought to my attention (random number based vs. time/Ethernet based; the e2fsprogs project), so I thought to offer support for generating by those other means. Upgraded to Xcode 2.4.1. Made a Universal Binary. Added a cmd-shift-U shortcut for the main "Generate UUID" service. Fixed some missing keyboard shortcuts. Revamped the documentation/readme. Created huuidgen tool.\
+\
+1.1.1		Hsoi		6 March 2011\
+Hsoi Enterprises assumes ownership over this product. Updated the product to reflect the new ownership. Updated to use Xcode 3.2.5.\
+}
