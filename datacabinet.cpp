@@ -17,6 +17,8 @@ DataCabinet::DataCabinet()
 , m_iCabinetVersion(0)
 , m_iElementScanned(0)
 , m_progressHandler(NULL)
+, m_error(false)
+, m_debugMode(false)
 {
     m_properties << "" << "" << "" << "" << "" << "";
 //    setProperty(0,"This is a QtInstall cabinet data file");
@@ -66,13 +68,13 @@ bool DataCabinet::openFile(QString const &filename,int fileOffset)
 
             m_iElementCount = myCabinetMagic.nelements;
             m_iCabinetVersion = myCabinetMagic.version;
-            dbgout(QString("\n**** opened cabinet file version '")+QString::number(myCabinetMagic.version)+"' with "+QString::number(myCabinetMagic.nelements)+" elemnts in it");
+			dbgout(QString("\n**** opened cabinet file version '")+QString::number(myCabinetMagic.version)+"' with "+QString::number(myCabinetMagic.nelements)+" elemnts in it");
 
-            dbgout(QString("Window  Title: ")+m_properties.at(ePropWindowTitle));
-            dbgout(QString("Welcome  Text: ")+m_properties.at(ePropWelcomeText));
-            dbgout(QString("Complete Text: ")+m_properties.at(ePropCompletionText));
-            dbgout(QString("License  Text: ")+m_properties.at(ePropLicenceText));
-            dbgout(QString("  Setup Comp.: ")+m_properties.at(ePropComponentDefinition));
+			dbgout(QString("Window  Title: ")+m_properties.at(ePropWindowTitle),true);
+			dbgout(QString("Welcome  Text: ")+m_properties.at(ePropWelcomeText),true);
+			dbgout(QString("Complete Text: ")+m_properties.at(ePropCompletionText),true);
+			dbgout(QString("License  Text: ")+m_properties.at(ePropLicenceText),true);
+			dbgout(QString("  Setup Comp.: ")+m_properties.at(ePropComponentDefinition),true);
         }
         else
             m_file.close();
@@ -103,7 +105,9 @@ bool DataCabinet::createFile(QString const &filename)
         m_file.write((char*)&myCabinetMagic,sizeof(myCabinetMagic));
         m_file.write(description.toLatin1(),myCabinetMagic.descrLength);
 
-        return true;
+		dbgout(QString("\n**** created cabinet file version '")+QString::number(myCabinetMagic.version)+"'");
+
+		return true;
     }
     else
 	{
@@ -176,6 +180,7 @@ bool DataCabinet::scanFile()
 
     return true;
 }
+
 bool DataCabinet::scanFileDatagram(QFile &fileptr,int attributes)
 {
     fileDataHeader myFileDataHeader;
@@ -197,7 +202,7 @@ bool DataCabinet::scanFileDatagram(QFile &fileptr,int attributes)
         data = fileptr.read(size);
 
     dbgout(QString("    destination='")+destination+"', lastModified='"+modified.toString()+"', attributes='"+QString::number(attributes)+"', compressed size="+QString::number(size)+" bytes");
-    return DatagramFileHandler::processFile(properties,destination,modified,attributes,myFileDataHeader.filePermissions,data);
+	return m_debugMode ? false : DatagramFileHandler::processFile(properties,destination,modified,attributes,myFileDataHeader.filePermissions,data);
 }
 bool DataCabinet::scanSettingsDatagram(QFile &fileptr,int attributes)
 {
@@ -214,7 +219,7 @@ bool DataCabinet::scanSettingsDatagram(QFile &fileptr,int attributes)
     QString value = fileptr.read(valueLength);;
 
     dbgout(QString("    key='")+key+"', value='"+value+"', attributes='"+QString::number(attributes)+"'");
-    return DatagramSettingsHandler::processSetting(key,properties,attributes,value);
+	return m_debugMode ? false : DatagramSettingsHandler::processSetting(key,properties,attributes,value);
 }
 bool DataCabinet::scanLinksDatagram(QFile &fileptr,int attributes)
 {
@@ -229,12 +234,16 @@ bool DataCabinet::scanLinksDatagram(QFile &fileptr,int attributes)
     int iconFileLength = myLinksDataHeader.iconFileLength;
     QString iconFile = fileptr.read(iconFileLength);
 
-    return DatagramLinksHandler::processLink((DatagramLinksHandler::linkCommand)myLinksDataHeader.operation,properties,target,iconFile,attributes);
+	return m_debugMode ? false : DatagramLinksHandler::processLink((DatagramLinksHandler::linkCommand)myLinksDataHeader.operation,properties,target,iconFile,attributes);
 }
 
 bool DataCabinet::hasError()
 {
     return m_error;
+}
+void DataCabinet::setDebugMode(bool debugging)
+{
+	m_debugMode = debugging;
 }
 
 void DataCabinet::appendFileDatagram(QString const &srcFilename,QString const &dstFilename,QString const &properties,int attributes)

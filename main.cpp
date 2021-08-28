@@ -34,12 +34,16 @@ struct installPatchStruct
 static struct installPatchStruct patchInformation = { MAGIC_PATTERN, 0xffffffff };
 
 static unsigned patchOffset = (unsigned long)&patchInformation.fileOffset-(unsigned long)&patchInformation.searchPattern[0];
+static char *m_argv0;
+
+static char lastbyte = 0x0;
 
 class csvFile : public QFile
 {
 public:
     csvFile(QString const &filename) : QFile(filename)
     {
+        lastbyte = 0x0;
     }
 
     QString readCsvLine()
@@ -73,15 +77,23 @@ private:
 			}
             *(data+read)=byte;
 
-            if( byte!='\r' ) read++;                // always ignore CR
-            if( byte=='\"' ) count++;               // if count of " is odd, we are inside cell definition
-            if( byte=='\n' )
+            if( byte=='\"' ) count++;                               // if count of " is odd, we are inside cell definition
+
+            bool endOfLine = false;
+            if( byte=='\r' )
+                endOfLine = true;
+            else if( byte=='\n' && lastbyte!='\r' )
+                endOfLine = true;
+
+            lastbyte = byte;
+
+            if( endOfLine )
 			{
-				if( (count%2)==0 )    // ignore newline characters inside cells
+                if( (count%2)==0 )    // ignore newline characters enclosed in '"'
 					EOL = true; // ready with csv line
-				else
-					read--;     // just inside cell
-			}
+            }
+            else if( byte!='\n' )
+                read++;
         } while( (read<maxSize) && !EOL );
         return read;
     }
@@ -312,8 +324,10 @@ void parseQmakeProject(DataCabinet &cab,QString const &baseDir,QString const &pr
     dbgout("    ...done.");
 }
 
-void cretaePackage(QString const &definitionName,QString const &packageName)
+bool cretaePackage(QString const &definitionName,QString const &packageName)
 {
+	bool ret = false;
+
     csvFile file(definitionName);
     if( file.open(QIODevice::ReadOnly) )
     {
@@ -323,7 +337,7 @@ void cretaePackage(QString const &definitionName,QString const &packageName)
         QFileInfo info(definitionName);
 
         // skip column description
-        file.readCsvLine();
+        QString header = file.readCsvLine();
 
         // read header definition
         QString input = file.readCsvLine();
@@ -370,7 +384,7 @@ void cretaePackage(QString const &definitionName,QString const &packageName)
                         int attributes = DatagramFileHandler::getPropertiesFromString(cells.at(3));
                         addDirectory(cab,srcpath,cells.at(2),cells.at(4),QString::null,attributes);
                     }
-                    if( cells.at(0).left(1)=="f" )
+                    else if( cells.at(0).left(1)=="f" )
                     {
                         int attributes = DatagramFileHandler::getPropertiesFromString(cells.at(3));
                         if( cells.at(0).mid(1,1)=="r" )
@@ -378,14 +392,14 @@ void cretaePackage(QString const &definitionName,QString const &packageName)
                         else
                             cab.appendFileDatagram(srcpath,cells.at(2),cells.at(4),attributes);
                     }
-                    if( cells.at(0).left(1)=="s" )
+                    else if( cells.at(0).left(1)=="s" )
                     {
                         if( cells.at(0).mid(1,2)=="oa" )
                             cab.appendSettingsDatagram(cells.at(1),cells.at(2),cells.at(4),settingsAppAndOrgName);
                         else
                             cab.appendSettingsDatagram(cells.at(1),cells.at(2),cells.at(4),cells.at(3).toInt());
                     }
-                    if( cells.at(0).left(1)=="l" )
+                    else if( cells.at(0).left(1)=="l" )
                     {
                         DatagramLinksHandler::linkCommand cmd = DatagramLinksHandler::eCreateStartupLink;
                         if( cells.at(0).mid(1,2)=="cs" )
@@ -398,11 +412,13 @@ void cretaePackage(QString const &definitionName,QString const &packageName)
                             cmd = DatagramLinksHandler::eRemoveDesktopLink;
                         cab.appendLinksDatagram(cmd,cells.at(2),cells.at(1),cells.at(4),cells.at(3).toInt());
                     }
-                    if( cells.at(0).left(1)=="p" )
+                    else if( cells.at(0).left(1)=="p" )
                     {
                         QFileInfo info2(srcpath);
                         parseQmakeProject(cab,info.dir().path(),cells.at(1),cells.at(2));
                     }
+                    else
+                        dbgout(QString("... unrecognized package code: '")+cells.at(0)+"'...");
                 }
                 else
                     dbgout(QString("... skipping '")+input.simplified()+"'...");
@@ -411,7 +427,75 @@ void cretaePackage(QString const &definitionName,QString const &packageName)
         cab.closeFile();
 
         file.close();
+
+		ret = true;
     }
+	else
+		dbgout(QString("file not found: '")+definitionName.simplified()+"'.");
+
+	return ret;
+}
+
+void createSetup(QString const &definitionName)
+{
+#ifdef Q_OS_WIN32
+			QString packageFilter = "QtInstall packages (*.qip);;QtInstall standalone application (*.exe)";
+#endif
+#ifdef Q_OS_DARWIN
+			QString packageFilter = "QtInstall packages (*.qip);;QtInstall standalone application (*.app)";
+#endif
+	QString selectedFilter;
+
+	QString packageName = QFileDialog::getSaveFileName(0,"Save Installation Package As","",packageFilter,&selectedFilter/*,QFileDialog::DontUseNativeDialog*/,QFileDialog::DontConfirmOverwrite);
+
+	if(!packageName.isEmpty() )
+	{
+		QString selectedExtension;
+		bool createEmbedded = false;
+
+		if( selectedFilter.contains(".qip") )
+			selectedExtension = ".qip";
+		else if( selectedFilter.contains(".app") )
+		{
+			selectedExtension = ".app";
+			createEmbedded = true;
+		}
+		else if( selectedFilter.contains(".exe") )
+		{
+			selectedExtension = ".exe";
+			createEmbedded = true;
+		}
+
+		if( !packageName.endsWith(selectedExtension) )
+			packageName.append(selectedExtension);
+
+		if( !QFile::exists(packageName) ||
+			QMessageBox::information(0,"warning","the file you have chosen already exists.\nWould you ike to overwrite it?",
+									 QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes )
+		{
+			if( createEmbedded )
+			{
+				cretaePackage(definitionName,"temp.qip");
+
+#ifdef Q_OS_WIN32
+				QString myOwnApp = m_argv0;
+#endif
+#ifdef Q_OS_DARWIN
+				QDir d(packageName);
+				d.mkpath(packageName);
+
+				QString myOwnApp = QString(m_argv0).remove("/Contents/MacOS/QtInstall");
+#endif
+				copyApplication(myOwnApp,packageName,"temp.qip");
+
+				QFile::remove("temp.qip");
+			}
+			else
+				cretaePackage(definitionName,packageName);
+
+			QMessageBox::information(0,"processing finished","definition file succesfully processed.");
+		}
+	}
 }
 
 int main(int argc, char *argv[])
@@ -420,14 +504,15 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("VISolutions.de");
     QCoreApplication::setApplicationName("QtInstall");
 
+	m_argv0 = argv[0];
+
     PathManagement::init();
 
 	bool installingPackage = true;
     QString selectedPackage;
-    QString definitionName;
 
     // we have to access both members of the patch structure here. Otherwise, optimizing compilers would drop the pattern data out of the executable.
-    // Don't change this code! The comparison of the path pattern is intentionally split into parts! (See definition ofPATTERN1)
+    // Don't change this code! The comparison of the path pattern is intentionally split into parts! (See definition of PATTERN1)
     int idx = 0; bool patternOk = true; int len = sizeof(PATTERN1)-1;
     patternOk = patternOk && (strncmp(patchInformation.searchPattern,PATTERN1,len)==0); idx+=len; len = sizeof(PATTERN2)-1;
     patternOk = patternOk && (strncmp(patchInformation.searchPattern+idx,PATTERN2,len)==0); idx+=len; len = sizeof(PATTERN3)-1;
@@ -435,6 +520,7 @@ int main(int argc, char *argv[])
     patternOk = patternOk && (strncmp(patchInformation.searchPattern+idx,PATTERN4,len)==0);
     if( patternOk && (patchInformation.fileOffset!=0xffffffff) )
     {
+        // embedded package found; the installer executable itself is the package
         selectedPackage = argv[0];
     }
     else
@@ -443,110 +529,54 @@ int main(int argc, char *argv[])
         {
             if( QMessageBox::question(0,"found definition.csv file","Do you want to create a\nQtInstall package form the\ngiven 'definition.csv' file ?",
                                   QMessageBox::Yes | QMessageBox::No)==QMessageBox::Yes )
-                installingPackage = false;
-
-            if( !installingPackage )
-                definitionName = "definition.csv";
+            installingPackage = false;
         }
     }
 
-        if( installingPackage )
+    if( installingPackage )
+    {
+        // we want to install a package from given file
+        if( selectedPackage.isEmpty() )
         {
-            if( selectedPackage.isEmpty() )
-            {
-                QDir actual("");
-                QStringList filter; filter << "*.qip";
-                QStringList found = actual.entryList(filter);
+            // package file not yet specified: show file selector
+            QDir actual("");
+            QStringList filter; filter << "*.qip";
+            QStringList found = actual.entryList(filter);
 
-                if( found.isEmpty() || found.count()>1 )
-                    selectedPackage = QFileDialog::getOpenFileName(0,"Select Installation Package","","QtInstall Files (*.qip)"/*,0,QFileDialog::DontUseNativeDialog*/);
-                else
-                    selectedPackage = found.at(0);
-            }
-
-            if( !selectedPackage.isEmpty() )
-            {
-                DataCabinet cab;
-                Wizard w(&cab);
-
-				int fileOffset = patchInformation.fileOffset;
-
-                if( cab.openFile(selectedPackage,fileOffset) )
-                {
-                    w.setWindowTitle(cab.getProperty(ePropWindowTitle));
-                    w.show();
-                    w.exec();
-                }
-            }
+            if( found.isEmpty() || found.count()>1 )
+                selectedPackage = QFileDialog::getOpenFileName(0,"Select Installation Package","","QtInstall Files (*.qip)"/*,0,QFileDialog::DontUseNativeDialog*/);
             else
-                installingPackage = false;
+                selectedPackage = found.at(0);
         }
-        if( !installingPackage )
+
+        if( !selectedPackage.isEmpty() )
         {
-#ifdef Q_OS_WIN32
-            QString packageFilter = "QtInstall packages (*.qip);;QtInstall standalone application (*.exe)";
-#endif
-#ifdef Q_OS_DARWIN
-            QString packageFilter = "QtInstall packages (*.qip);;QtInstall standalone application (*.app)";
-#endif
-            QString packageName;
+            // do the installation
+            DataCabinet cab;
+            Wizard w(&cab);
 
-            if( definitionName.isEmpty() )
-                definitionName = QFileDialog::getOpenFileName(0,"Select Installation Definition","","QtInstall Definitions (*.csv)"/*,0,QFileDialog::DontUseNativeDialog*/);
+            int fileOffset = patchInformation.fileOffset;
 
-            QString selectedFilter;
-            if( !installingPackage && !definitionName.isEmpty() )
-                packageName = QFileDialog::getSaveFileName(0,"Save Installation Package As","",packageFilter,&selectedFilter/*,QFileDialog::DontUseNativeDialog*/,QFileDialog::DontConfirmOverwrite);
-
-            if(!packageName.isEmpty() )
+            if( cab.openFile(selectedPackage,fileOffset) )
             {
-                QString selectedExtension;
-                bool createEmbedded = false;
-
-                if( selectedFilter.contains(".qip") )
-                    selectedExtension = ".qip";
-                else if( selectedFilter.contains(".app") )
-                {
-                    selectedExtension = ".app";
-                    createEmbedded = true;
-                }
-                else if( selectedFilter.contains(".exe") )
-                {
-                    selectedExtension = ".exe";
-                    createEmbedded = true;
-                }
-
-                if( !packageName.endsWith(selectedExtension) )
-                    packageName.append(selectedExtension);
-
-                if( !QFile::exists(packageName) ||
-                    QMessageBox::information(0,"warning","the file you have chosen already exists.\nWould you ike to overwrite it?",
-                                             QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes )
-                {
-                    if( createEmbedded )
-                    {
-                        cretaePackage(definitionName,"temp.qip");
-
-#ifdef Q_OS_WIN32
-                        QString myOwnApp = argv[0];
-#endif
-#ifdef Q_OS_DARWIN
-                        QDir d(packageName);
-                        d.mkpath(packageName);
-
-                        QString myOwnApp = QString(argv[0]).remove("/Contents/MacOS/QtInstall");
-#endif
-                        copyApplication(myOwnApp,packageName,"temp.qip");
-
-                        QFile::remove("temp.qip");
-                    }
-                    else
-                        cretaePackage(definitionName,packageName);
-
-                    QMessageBox::information(0,"processing finished","definition file succesfully processed.");
-                }
+                w.setWindowTitle(cab.getProperty(ePropWindowTitle));
+                w.show();
+                w.exec();
             }
         }
+        else
+        {
+            // no file given; switch to package creation mode and show wizard
+            Wizard wizz(0,0);
+            wizz.setWindowTitle(QString("QtInstall ")+QtInstallVersion+" creating packages");
+            wizz.show();
+            return qApp->exec();
+        }
+    }
+    else
+    {
+        //createPackage("definition.csv");
+    }
 
     if( dbgVisible() )
         return a.exec();

@@ -26,6 +26,7 @@ HEADERS += wizard.h \
     licensepage.h \
     completepage.h \
     ../utilities.h
+
 RESOURCES += QtInstall.qrc
 OTHER_FILES += definition.csv \
     welcome.html \
@@ -33,15 +34,15 @@ OTHER_FILES += definition.csv \
     ressources/license.txt \
     LICENSE.html \
     ReleaseNotes.txt
-FORMS += 
-win32 { 
+
+win32 {
     MOC_DIR = c:/tmp/qtinstall_obj
     UI_DIR = c:/tmp/qtinstall_obj
     OBJECTS_DIR = c:/tmp/qtinstall_obj
     RCC_DIR = c:/tmp/qtinstall_obj
     RC_FILE = ressources/QtInstall.rc
 }
-macx { 
+macx {
     QMAKE_MAKEFILE=MacMakefile
     MOC_DIR = /var/tmp/qtinstall_obj
     UI_DIR = /var/tmp/qtinstall_obj

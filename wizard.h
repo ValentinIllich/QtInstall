@@ -1,7 +1,8 @@
 #ifndef WIZARD_H
 #define WIZARD_H
 
-#include <QWizard>
+#include <qtgui>
+//#include <QWizard>
 
 #include "datacabinet.h"
 
@@ -18,13 +19,43 @@ public:
 	/** destructor */
     ~Wizard();
 
+	void setDebugMode(bool debugging);
+
 public slots:
     void showHelp();
     void showCustom(int which);
 
+protected:
+    void closeEvent ( QCloseEvent * event );
+
 private:
 	/** reference to the data cabinet container class */
     DataCabinet *m_cabinet;
+	/** when in debugging mode, delet on close, no actions */
+	bool m_debugging;
+};
+
+class ConfigPage : public QWizardPage
+{
+    Q_OBJECT
+
+public:
+    ConfigPage();
+	~ConfigPage();
+
+public slots:
+    void showPreview();
+	void selectFile();
+	void create();
+
+    virtual void initializePage();
+    virtual bool validatePage();
+
+private:
+	QLabel *m_filename;
+	QPushButton *m_preview;
+	QPushButton *m_fileselect;
+	QPushButton *m_create;
 };
 
 #endif // WIZARD_H

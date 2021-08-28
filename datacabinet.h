@@ -20,7 +20,7 @@ Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-130
 #include <QStringList>
 #include <QFile>
 
-#define QtInstallVersion        "1.5"
+#define QtInstallVersion        "1.6"
 
 #define useFilePermissions      0x00000001      // attributes for fileDatagrams
 #define executablePermission    0x00000002
@@ -112,6 +112,7 @@ public:
     bool scanLinksDatagram(QFile &fileptr,int attributes);
 
     bool hasError();
+	void setDebugMode(bool debugging);
 
 private:
     QStringList m_properties;
@@ -126,6 +127,7 @@ private:
     IDataProgress   *m_progressHandler;
 
     bool        m_error;
+	bool		m_debugMode;
 };
 
 #endif // DATACABINET_H

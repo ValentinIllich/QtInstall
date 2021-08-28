@@ -1,4 +1,9 @@
-QtInstall Release Notes (C) Valentin Illich 2009
+QtInstall Release Notes (C) Valentin Illich 2009/2010
+
+Release 1.6:
+============
+
+- added simple wizard for creating setup packages
 
 Release 1.5:
 ============
