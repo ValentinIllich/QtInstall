@@ -1,0 +1,3 @@
+*.DS_Store
+/QtInstallMac.pro.user
+/QtInstallWin.pro.user
