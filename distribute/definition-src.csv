@@ -6,5 +6,5 @@ Item Type;Source Path;Destination Path;Atrributes;Component(s);Target
 #;;;;;
 #;########## installing sources ##########;;;;
 #;;;;;
-p;../QtInstall.pro;<HOMEDIR>/QtInstall;;;
+p;../QtInstallMac.pro;<HOMEDIR>/QtInstall;;;
 #;;;;;
