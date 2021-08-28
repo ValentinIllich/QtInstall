@@ -4,14 +4,20 @@
 #include "welcomepage.h"
 #include "installpage.h"
 #include "completepage.h"
+#include "pathmanagement.h"
 
+#include <QtGui>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QPushButton>
 
 #include <QProcess>
+#include <QDesktopWidget>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QDir>
-#include <QSettings>
 
-#include "../utilities.h"
+#include "../backup/Utilities.h"
 
 extern void showHelp(QObject *parent,QString const &ressourcePath,QString const &helpfile);
 
@@ -146,12 +152,13 @@ Wizard::Wizard(DataCabinet *cab,QWidget *parent)
     setWizardStyle(QWizard::ClassicStyle);
     setOption(QWizard::HaveHelpButton);
 
-    QSettings sett;
-    if( sett.value("QtInstallVersion","").toString().isEmpty() )
+    installSettings sett;
+    if( sett.value("QtInstallVersion","").isEmpty() )
       addPage(new LicensePage());
 
     addPage(new ConfigPage());
-    QRect size = qApp->desktop()->screenGeometry(0);
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect size = screen->geometry();
     resize(size.width()/3*2,size.height()/2);
   }
 

@@ -1,10 +1,14 @@
 <RCC>
-    <qresource prefix="/helperApps" >
-        <file alias="InstallHelper.exe" >ressources/InstallHelper.exe</file>
-        <file alias="SSLoginItems.bin" >ressources/SSLoginItems.bin</file>
+    <qresource prefix="/helperApps">
+        <file alias="InstallHelper.exe">ressources/InstallHelper.exe</file>
+        <file alias="SSLoginItems.bin">ressources/SSLoginItems.bin</file>
+        <file alias="makealias.sh">ressources/makealias.sh</file>
+        <file alias="makestartup.sh">ressources/makestartup.sh</file>
+        <file alias="removealias.sh">ressources/removealias.sh</file>
+        <file alias="removestartup.sh">ressources/removestartup.sh</file>
     </qresource>
-    <qresource prefix="/documentation" >
-        <file alias="QtInstall.pdf" >ressources/QtInstall.pdf</file>
-        <file alias="GPL-license.html" >LICENSE.html</file>
+    <qresource prefix="/documentation">
+        <file alias="QtInstall.pdf">ressources/QtInstall.pdf</file>
+        <file alias="GPL-license.html">LICENSE.html</file>
     </qresource>
 </RCC>

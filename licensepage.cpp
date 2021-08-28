@@ -1,7 +1,12 @@
 #include "licensepage.h"
 #include "datacabinet.h"
+#include "pathmanagement.h"
 
-#include <qtgui>
+#include <QtGui>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QMessageBox>
+#include <QFileDialog>
 
 LicensePage::LicensePage()
     : m_cabinet(0), m_ownLicense(true)
@@ -58,7 +63,7 @@ bool LicensePage::validatePage()
 {
     if( m_check->isChecked() )
     {
-        QSettings sett;
+      installSettings sett;
 
         sett.setValue("QtInstallVersion",QtInstallVersion);
         return true;

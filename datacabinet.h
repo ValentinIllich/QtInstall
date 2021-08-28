@@ -20,7 +20,10 @@ Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-130
 #include <QStringList>
 #include <QFile>
 
-#define QtInstallVersion        "1.8"
+#define QtInstallVersion        "2.0"
+
+#define OrganizationName        "VISolutions.de"
+#define ApplicationName         "QtInstall"
 
 #define useFilePermissions      0x00000001      // attributes for fileDatagrams
 #define executablePermission    0x00000002

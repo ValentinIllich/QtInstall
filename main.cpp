@@ -3,6 +3,7 @@
 #include <QFileInfoList>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QInputDialog>
 
 #include "wizard.h"
 #include "datacabinet.h"
@@ -10,9 +11,11 @@
 #include "datagramlinkshandler.h"
 #include "pathmanagement.h"
 
-#include "../utilities.h"
+#include "../backup/Utilities.h"
 
-extern "C" int getAdminRights(int argc, char* argv[]);
+extern "C" void checkForPasswdHelper(int argc, char **argv);
+extern "C" int hasAdminRights(int argc, char* argv[]);
+extern "C" int getAdminRights(int argc, char* argv[], char *password);
 
 //  the magic pattern which is used to find the correct position in the compiled executable to patch in the offset of the cabinet data is
 //  defined in four parts. There may exist only one position in the whole source where these parts are concatenated - namely in the initialization
@@ -35,7 +38,7 @@ struct installPatchStruct
 
 static struct installPatchStruct patchInformation = { MAGIC_PATTERN, 0xffffffff };
 
-static unsigned patchOffset = (unsigned long)&patchInformation.fileOffset-(unsigned long)&patchInformation.searchPattern[0];
+static unsigned patchOffset = (unsigned)(quint64)&patchInformation.fileOffset-(quint64)&patchInformation.searchPattern[0];
 static char *m_argv0;
 
 static char lastbyte = 0x0;
@@ -47,7 +50,7 @@ csvFile::csvFile(QString const &filename) : QFile(filename)
 
 QString csvFile::readCsvLine()
 {
-	char buffer[4097];
+  char buffer[4097];
 	bool eol;
 	QString result;
 	do
@@ -57,7 +60,7 @@ QString csvFile::readCsvLine()
 		result.append(buffer);
 	} while( !eol );
 
-	return result;
+  return result;
 }
 
 qint64 csvFile::readCsvLineData( char * data, qint64 maxSize, bool &EOL )
@@ -93,7 +96,7 @@ qint64 csvFile::readCsvLineData( char * data, qint64 maxSize, bool &EOL )
 		else if( byte!='\n' )
 			read++;
 	} while( (read<maxSize) && !EOL );
-	return read;
+  return read;
 }
 
 QString getText(QString const &csvPath,QString const &cell)
@@ -222,7 +225,7 @@ void addDirectory(DataCabinet &cab,QString const &baseDir,QString const &destina
                 dst.remove(baseDir);
                 dst = destinationBase + dst;
 
-                //dbgout(QString("adding '")+src+"'/'"+dst+"'");
+                //dbgout(QString("adding '")+src+"'/'"+dst+"'",0);
                 cab.appendFileDatagram(src,dst,properties,attributes);
             }
         }
@@ -323,141 +326,142 @@ void parseQmakeProject(DataCabinet &cab,QString const &baseDir,QString const &pr
 
 bool cretaePackage(QString const &definitionName,QString const &packageName)
 {
-	bool ret = false;
+  bool ret = false;
 
-    csvFile file(definitionName);
-    if( file.open(QIODevice::ReadOnly) )
-    {
-            DataCabinet cab;
-        dbgVisible(true);
+  csvFile file(definitionName);
+  if( file.open(QIODevice::ReadOnly) )
+  {
 
-        QFileInfo info(definitionName);
+      DataCabinet cab;
+      dbgVisible(true);
 
-        // check header definition
-        QString header = file.readCsvLine();
-        if( header.contains("WindowTitle") )
-        {
-            // old version: UUID, version etc not given
-            cab.setProperty(ePropSetupId,definitionName/*"88C45A0C-39E4-4EC8-9A47-8A75AE5120CD"*/);
-            cab.setProperty(ePropSetupMajor,"0");
-            cab.setProperty(ePropSetupMinor,"0");
-        }
-        else
-        {
-            // new version: extended csv format
-            QString input = file.readCsvLine();
-            QStringList specs = input.remove("\"").split(";");
+      QFileInfo info(definitionName);
 
-            cab.setProperty(ePropSetupId,specs.at(1));
-            cab.setProperty(ePropSetupMajor,specs.at(0));
-            cab.setProperty(ePropSetupMinor,specs.at(3));
+      // check header definition
+      QString header = file.readCsvLine();
+      if( header.contains("WindowTitle") )
+      {
+          // old version: UUID, version etc not given
+          cab.setProperty(ePropSetupId,definitionName/*"88C45A0C-39E4-4EC8-9A47-8A75AE5120CD"*/);
+          cab.setProperty(ePropSetupMajor,"0");
+          cab.setProperty(ePropSetupMinor,"0");
+      }
+      else
+      {
+          // new version: extended csv format
+          QString input = file.readCsvLine();
+          QStringList specs = input.remove("\"").split(";");
 
-            // skip column description
-            file.readCsvLine();
-        }
+          cab.setProperty(ePropSetupId,specs.at(1));
+          cab.setProperty(ePropSetupMajor,specs.at(0));
+          cab.setProperty(ePropSetupMinor,specs.at(3));
 
-        // read header definition
-        QString input = file.readCsvLine();
-        QStringList headers = input.remove("\"").split(";");
-        dbgout(QString("  Setup  UUID: ")+cab.getProperty(ePropSetupId),1);
-        dbgout(QString("  Setup Major: ")+cab.getProperty(ePropSetupMajor),1);
-        dbgout(QString("  Setup Minor: ")+cab.getProperty(ePropSetupMinor),1);
-        dbgout(QString("Window  Title: ")+headers.at(0),1);
-        dbgout(QString("Welcome  Text: ")+headers.at(1),1);
-        dbgout(QString("  Setup Comp.: ")+headers.at(2),1);
-        dbgout(QString("License  Text: ")+headers.at(3),1);
-        dbgout(QString("Complete Text: ")+headers.at(4),1);
+          // skip column description
+          file.readCsvLine();
+      }
 
-        cab.setProperty(ePropWindowTitle,getText(info.dir().path(),headers.at(0))); // Fenstername
-        cab.setProperty(ePropWelcomeText,getText(info.dir().path(),headers.at(1))); // Text für Willkommensseite
-        cab.setProperty(ePropCompletionText,getText(info.dir().path(),headers.at(2))); // Text für Completion
-        cab.setProperty(ePropLicenceText,getText(info.dir().path(),headers.at(3))); // Text für Lizenz
-        cab.setProperty(ePropComponentDefinition,headers.at(4)); // Definition Komponenten
+      // read header definition
+      QString input = file.readCsvLine();
+      QStringList headers = input.remove("\"").split(";");
+      dbgout(QString("  Setup  UUID: ")+cab.getProperty(ePropSetupId),1);
+      dbgout(QString("  Setup Major: ")+cab.getProperty(ePropSetupMajor),1);
+      dbgout(QString("  Setup Minor: ")+cab.getProperty(ePropSetupMinor),1);
+      dbgout(QString("Window  Title: ")+headers.at(0),1);
+      dbgout(QString("Welcome  Text: ")+headers.at(1),1);
+      dbgout(QString("  Setup Comp.: ")+headers.at(2),1);
+      dbgout(QString("License  Text: ")+headers.at(3),1);
+      dbgout(QString("Complete Text: ")+headers.at(4),1);
 
-        QString target;
+      cab.setProperty(ePropWindowTitle,getText(info.dir().path(),headers.at(0))); // Fenstername
+      cab.setProperty(ePropWelcomeText,getText(info.dir().path(),headers.at(1))); // Text für Willkommensseite
+      cab.setProperty(ePropCompletionText,getText(info.dir().path(),headers.at(2))); // Text für Completion
+      cab.setProperty(ePropLicenceText,getText(info.dir().path(),headers.at(3))); // Text für Lizenz
+      cab.setProperty(ePropComponentDefinition,headers.at(4)); // Definition Komponenten
+
+      QString target;
 #ifdef Q_OS_WIN32
-        target = "win32";
+      target = "win32";
 #endif
 #ifdef Q_OS_DARWIN
-        target = "mac";
+      target = "mac";
 #endif
 
-        if( !cab.createFile(packageName) )
-        {
-            file.close();
-            return false;
-        }
+      if( !cab.createFile(packageName) )
+      {
+          file.close();
+          return false;
+      }
 
-        // skip column description
-        file.readCsvLine();
+      // skip column description
+      file.readCsvLine();
 
-        while( file.bytesAvailable() )
-        {
-            // read entry
-            QString input = file.readCsvLine();
-            QStringList cells = input.split(";");
+      while( file.bytesAvailable() )
+      {
+          // read entry
+          QString input = file.readCsvLine();
+          QStringList cells = input.split(";");
 
-            // skip comment lines; take entry only if suitable target
-            if( input.at(0)!='#' )
-            {
-                if( cells.at(5).simplified().isEmpty() || cells.at(5).contains(target) )
-                {
-                    QString srcpath = QDir::isAbsolutePath(cells.at(1)) ? cells.at(1) : info.dir().path()+"/"+cells.at(1);
-                    if( cells.at(0)=="d" )
-                    {
-                        int attributes = DatagramFileHandler::getPropertiesFromString(cells.at(3));
-                        addDirectory(cab,srcpath,cells.at(2),cells.at(4),QString::null,attributes);
-                    }
-                    else if( cells.at(0).left(1)=="f" )
-                    {
-                        int attributes = DatagramFileHandler::getPropertiesFromString(cells.at(3));
-                        if( cells.at(0).mid(1,1)=="r" )
-                            cab.appendFileDatagram("",cells.at(2),cells.at(4),removeDestination);
-                        else
-                            cab.appendFileDatagram(srcpath,cells.at(2),cells.at(4),attributes);
-                    }
-                    else if( cells.at(0).left(1)=="s" )
-                    {
-                        if( cells.at(0).mid(1,2)=="oa" )
-                            cab.appendSettingsDatagram(cells.at(1),cells.at(2),cells.at(4),settingsAppAndOrgName);
-                        else
-                            cab.appendSettingsDatagram(cells.at(1),cells.at(2),cells.at(4),cells.at(3).toInt());
-                    }
-                    else if( cells.at(0).left(1)=="l" )
-                    {
-                        DatagramLinksHandler::linkCommand cmd = DatagramLinksHandler::eCreateStartupLink;
-                        if( cells.at(0).mid(1,2)=="cs" )
-                            cmd = DatagramLinksHandler::eCreateStartupLink;
-                        if( cells.at(0).mid(1,2)=="cd" )
-                            cmd = DatagramLinksHandler::eCreateDesktopLink;
-                        if( cells.at(0).mid(1,2)=="rs" )
-                            cmd = DatagramLinksHandler::eRemoveStartupLink;
-                        if( cells.at(0).mid(1,2)=="rd" )
-                            cmd = DatagramLinksHandler::eRemoveDesktopLink;
-                        cab.appendLinksDatagram(cmd,cells.at(2),cells.at(1),cells.at(4),cells.at(3).toInt());
-                    }
-                    else if( cells.at(0).left(1)=="p" )
-                    {
-                        QFileInfo info2(srcpath);
-                        parseQmakeProject(cab,info.dir().path(),cells.at(1),cells.at(2));
-                    }
-                    else
-                        dbgout(QString("#### unrecognized package code: '")+cells.at(0)+"'...",0);
-                }
-                else
-                    dbgout(QString("... skipping '")+input.simplified()+"'...",2);
-            }
-        }
-        cab.closeFile();
+          // skip comment lines; take entry only if suitable target
+          if( input.at(0)!='#' )
+          {
+              if( cells.size()>=6 && (cells.at(5).simplified().isEmpty() || cells.at(5).contains(target)) )
+              {
+                  QString srcpath = QDir::isAbsolutePath(cells.at(1)) ? cells.at(1) : info.dir().path()+"/"+cells.at(1);
+                  if( cells.at(0)=="d" )
+                  {
+                      int attributes = DatagramFileHandler::getPropertiesFromString(cells.at(3));
+                      addDirectory(cab,srcpath,cells.at(2),cells.at(4),QString(),attributes);
+                  }
+                  else if( cells.at(0).left(1)=="f" )
+                  {
+                      int attributes = DatagramFileHandler::getPropertiesFromString(cells.at(3));
+                      if( cells.at(0).mid(1,1)=="r" )
+                          cab.appendFileDatagram("",cells.at(2),cells.at(4),removeDestination);
+                      else
+                          cab.appendFileDatagram(srcpath,cells.at(2),cells.at(4),attributes);
+                  }
+                  else if( cells.at(0).left(1)=="s" )
+                  {
+                      if( cells.at(0).mid(1,2)=="oa" )
+                          cab.appendSettingsDatagram(cells.at(1),cells.at(2),cells.at(4),settingsAppAndOrgName);
+                      else
+                          cab.appendSettingsDatagram(cells.at(1),cells.at(2),cells.at(4),cells.at(3).toInt());
+                  }
+                  else if( cells.at(0).left(1)=="l" )
+                  {
+                      DatagramLinksHandler::linkCommand cmd = DatagramLinksHandler::eCreateStartupLink;
+                      if( cells.at(0).mid(1,2)=="cs" )
+                          cmd = DatagramLinksHandler::eCreateStartupLink;
+                      if( cells.at(0).mid(1,2)=="cd" )
+                          cmd = DatagramLinksHandler::eCreateDesktopLink;
+                      if( cells.at(0).mid(1,2)=="rs" )
+                          cmd = DatagramLinksHandler::eRemoveStartupLink;
+                      if( cells.at(0).mid(1,2)=="rd" )
+                          cmd = DatagramLinksHandler::eRemoveDesktopLink;
+                      cab.appendLinksDatagram(cmd,cells.at(2),cells.at(1),cells.at(4),cells.at(3).toInt());
+                  }
+                  else if( cells.at(0).left(1)=="p" )
+                  {
+                      QFileInfo info2(srcpath);
+                      parseQmakeProject(cab,info.dir().path(),cells.at(1),cells.at(2));
+                  }
+                  else
+                      dbgout(QString("#### unrecognized package code: '")+cells.at(0)+"'...",0);
+              }
+              else
+                  dbgout(QString("... skipping '")+input.simplified()+"'...",2);
+          }
+      }
+      cab.closeFile();
 
-        file.close();
+      file.close();
 
-		ret = true;
-    }
-	else
-        dbgout(QString("#### file not found: '")+definitionName.simplified()+"'.",0);
+    ret = true;
+  }
+  else
+    dbgout(QString("#### file not found: '")+definitionName.simplified()+"'.",0);
 
-	return ret;
+  return ret;
 }
 
 void createSetup(QString const &definitionName)
@@ -528,7 +532,15 @@ void createSetup(QString const &definitionName)
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+  checkForPasswdHelper(argc,argv);
+
+  bool ok = true;
+  QString text = "";
+
+  if( argc==2 )
+    qDebug("++++ running as admin");
+
+  QApplication a(argc, argv);
     QCoreApplication::setOrganizationName("VISolutions.de");
     QCoreApplication::setApplicationName("QtInstall");
 
@@ -536,7 +548,7 @@ int main(int argc, char *argv[])
 
     PathManagement::init();
 
-	bool installingPackage = true;
+  bool installingPackage = true;
     QString selectedPackage;
 
     // we have to access both members of the patch structure here. Otherwise, optimizing compilers would drop the pattern data out of the executable.
@@ -565,7 +577,7 @@ int main(int argc, char *argv[])
 
     if( installingPackage )
     {
-        // we want to install a package from given file
+      // we want to install a package from given file
         if( selectedPackage.isEmpty() )
         {
             // package file not yet specified: show file selector
@@ -581,10 +593,25 @@ int main(int argc, char *argv[])
 
         if( !selectedPackage.isEmpty() )
         {
+            if( !hasAdminRights(argc,argv) )
+            {
+#if defined(Q_OS_MAC)  || defined(Q_OS_LINUX)
+                text = QInputDialog::getText(0,"Authorization",
+                                               "Enter Administrator Password:", QLineEdit::Password,
+                                               "", &ok);
+                if (text.isEmpty())
+                    ok = false;
+#endif
+                if( ok )
+                    getAdminRights(argc,argv,text.toLatin1().data());
+            }
+
             // do the installation
             DataCabinet cab;
 
             int fileOffset = patchInformation.fileOffset;
+
+            //getAdminRights(argc,argv);
 
             if( cab.openFile(selectedPackage,fileOffset) )
             {
@@ -618,6 +645,8 @@ int main(int argc, char *argv[])
     {
         if( QMessageBox::question(0,"admin access needed","Do you want to restart the installer as administrator ?",
                                   QMessageBox::Yes | QMessageBox::No)==QMessageBox::Yes )
-            getAdminRights(argc,argv);
+            ;//getAdminRights(argc,argv);
     }
+
+    return 0;
 }

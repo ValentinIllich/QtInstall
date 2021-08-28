@@ -5,7 +5,7 @@
 #include <QSettings>
 #include <QCoreApplication>
 
-#include "../utilities.h" // dbgout()
+#include "../backup/Utilities.h" // dbgout()
 
 static bool m_debugMode = false;
 

@@ -9,10 +9,9 @@
 #include <QPlainTextEdit>
 #include <QApplication>
 #include <QMessageBox>
-#include <QSettings>
 #include <QDir>
 
-#include "../utilities.h"
+#include "../backup/Utilities.h"
 
 QString DataCabinet::m_emptyProperty = "";
 QString DataCabinet::m_uninstallFile = "";
@@ -236,7 +235,7 @@ bool DataCabinet::scanFileDatagram(QFile &fileptr,int attributes)
 
   dbgout(QString("    destination='")+destination+"', lastModified='"+modified.toString()+"', attributes='"+QString::number(attributes)+"', compressed size="+QString::number(size)+" bytes",1);
 
-  return DatagramFileHandler::processFile(getProperty(ePropSetupId),properties,destination,modified,attributes,myFileDataHeader.filePermissions,data);
+  return DatagramFileHandler::processFile(getProperty(ePropSetupId)+"-"+PathManagement::getUser(),properties,destination,modified,attributes,myFileDataHeader.filePermissions,data);
 }
 bool DataCabinet::scanSettingsDatagram(QFile &fileptr,int attributes)
 {
@@ -391,10 +390,7 @@ void DataCabinet::appendLinksDatagram(int linkCommand,QString const &target,QStr
 
 void DataCabinet::registerInstallation()
 {
-  QCoreApplication::setOrganizationName("VISolutions.de");
-  QCoreApplication::setApplicationName("QtInstall");
-
-  QSettings sett;
+  installSettings sett;
 
   QString versionEntry = getProperty(ePropSetupMajor) + ";" + getProperty(ePropSetupMinor);
   sett.setValue(getProperty(ePropSetupId),versionEntry);
@@ -402,10 +398,10 @@ void DataCabinet::registerInstallation()
 
 bool DataCabinet::isUpdateInstallation(bool &isMajor,bool &isMinor)
 {
-  QSettings sett;
+  installSettings sett;
 
   QString key = getProperty(ePropSetupId);
-  QString versionEntry = sett.value(key,"").toString();
+  QString versionEntry = sett.value(key,"");
 
   if( versionEntry.isEmpty() )
   {
@@ -449,7 +445,7 @@ void DataCabinet::undoInstallation()
       if( input.left(3)=="rf:" )
       {
         dbgout(QString("    remove file destination='")+input.mid(3)+"'",1);
-        m_error = m_error | DatagramFileHandler::processUndo(getProperty(ePropSetupId),input.mid(3));
+        m_error = m_error | DatagramFileHandler::processUndo(getProperty(ePropSetupId)+"-"+PathManagement::getUser(),input.mid(3));
       }
       if( input.left(3)=="sa:" )
       {
@@ -480,10 +476,7 @@ void DataCabinet::undoInstallation()
 
     file.close();
 
-    QCoreApplication::setOrganizationName("VISolutions.de");
-    QCoreApplication::setApplicationName("QtInstall");
-
-    QSettings sett;
+    installSettings sett;
     sett.remove(getProperty(ePropSetupId));
     //sett.setValue(getProperty(ePropSetupId),"");
   }

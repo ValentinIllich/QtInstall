@@ -1,8 +1,10 @@
 #include "installpage.h"
 
-#include <qtgui>
+#include <QtGui>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 
-#include "../utilities.h" // dbgout()
+#include "../backup/Utilities.h" // dbgout()
 
 InstallPage::InstallPage(DataCabinet *cab)
     : m_cabinet(cab)

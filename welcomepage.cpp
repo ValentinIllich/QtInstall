@@ -1,7 +1,8 @@
 #include "welcomepage.h"
 #include "datacabinet.h"
 
-#include <qtgui>
+#include <QtGui>
+#include <QVBoxLayout>
 
 WelcomePage::WelcomePage(DataCabinet *cab)
     : m_cabinet(cab)

@@ -1,8 +1,12 @@
 #ifndef WIZARD_H
 #define WIZARD_H
 
-#include <qtgui>
-//#include <QWizard>
+#include <QtGui>
+//#include <QVBoxLayout>
+#include <QWizard>
+#include <QLabel>
+#include <QCheckBox>
+#include <QPlainTextEdit>
 
 #include "datacabinet.h"
 

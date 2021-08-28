@@ -2,100 +2,86 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #if defined(Q_OS_WIN32)
 #include <windows.h>
 #endif
-#if defined(Q_OS_MAC)
-#include <Security/Authorization.h>
-#include <Security/AuthorizationTags.h>
+#if defined(Q_OS_MAC) || defined(Q_OS_LINUX)
+#include <stdio.h>
 #endif
 
-int getAdminRights(int argc, char* argv[]) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+void checkForPasswdHelper(int argc, char **argv)
+{
+#if defined(Q_OS_MAC) || defined(Q_OS_LINUX)
+    if( strstr(argv[0],"pwdhelper")!=0 )
+    {
+      static char buff[128];
+      FILE *fp=fopen("/tmp/passwd","r");
+      if( fp )
+      {
+        size_t read = fread(buff,1,127,fp);
+        buff[read] = 0x0;
+        fclose(fp);
+        remove("/tmp/passwd");
+      }
+      fprintf(stdout,"%s",buff);
+      exit(0);
+    }
+#endif
+}
+
+int hasAdminRights(int argc, char* argv[])
+{
+  if( argc==2 && strcmp(argv[1],"-admin")==0 )
+      return 1;
+
+  return 0;
+}
+
+int getAdminRights(int argc, char* argv[], char *password)
+{
     int result = -1;
 
     if( argc==2 && strcmp(argv[1],"-admin")==0 )
         return 0;
     else if( argc==1 )
     {
-#if defined(Q_OS_WIN32)
-
+#if defined(Q_OS_WIN)
         HANDLE child = ShellExecuteA(NULL, "runas", argv[0], "-admin", NULL, SW_SHOWNORMAL);
         if (child) {
           // User accepted UAC prompt (gave permission).
           // The unprivileged parent should wait for
           // the privileged child to finish.
           exit(0);
-//          WaitForSingleObject(child, INFINITE);
-//          CloseHandle(pid);
         }
 #endif
-#if defined(Q_OS_MAC)
-        int read (long,StringPtr,int);
-        int write (long,StringPtr,int);
-
-        OSStatus myStatus = 1;
-        AuthorizationRef myAuthorizationRef;
-
-        myStatus = AuthorizationCreate(
-            NULL,
-            kAuthorizationEmptyEnvironment,
-            kAuthorizationFlagDefaults,
-            &myAuthorizationRef);
-
-        if (myStatus != errAuthorizationSuccess)
-            return myStatus;
-
-        do
+#if defined(Q_OS_MAC) || defined(Q_OS_LINUX)
+        FILE *fp=fopen("/tmp/passwd","w");
+        if( fp )
         {
+          fprintf(fp,"%s\n",password);
+          fclose(fp);
+        }
 
-            {
-              AuthorizationItem myItems = {kAuthorizationRightExecute, 0, NULL, 0};
-              AuthorizationRights myRights = {1, &myItems};
-              AuthorizationFlags myFlags =
-                  kAuthorizationFlagDefaults |
-                  kAuthorizationFlagInteractionAllowed |
-                  kAuthorizationFlagPreAuthorize |
-                  kAuthorizationFlagExtendRights;
+        char myReadBuffer[4096];
+        sprintf(myReadBuffer,"rm -f /tmp/pwdhelper");
+        int ret0 = system(myReadBuffer);
+        sprintf(myReadBuffer,"ln -s %s /tmp/pwdhelper",argv[0]);
+        int ret1 = system(myReadBuffer);
 
-              myStatus = AuthorizationCopyRights(
-                  myAuthorizationRef, &myRights, NULL, myFlags, NULL );
-            }
+        sprintf(myReadBuffer,"export SUDO_ASKPASS=/tmp/pwdhelper;sudo -A -k %s -admin",argv[0]);
+        int ret2 = system(myReadBuffer);
+        exit(0);
 
-            if (myStatus != errAuthorizationSuccess)
-                break;
-
-            {
-                FILE *myCommunicationsPipe = NULL;
-                unsigned char myReadBuffer[128];
-
-                char *argvs[] = { "-admin",NULL };
-                myStatus = AuthorizationExecuteWithPrivileges(
-                    myAuthorizationRef,
-                    argv[0],
-                    kAuthorizationFlagDefaults,
-                    &argvs[0],
-                    &myCommunicationsPipe);
-
-                if (myStatus == errAuthorizationSuccess)
-                    for(;;)
-                    {
-                        exit(0);
-                        int bytesRead = read(fileno(myCommunicationsPipe), myReadBuffer, sizeof(myReadBuffer));
-                        if (bytesRead < 1) break;
-                        write(fileno(stdout), myReadBuffer, bytesRead);
-                    }
-            }
-        } while (0);
-
-        AuthorizationFree(myAuthorizationRef, kAuthorizationFlagDefaults);
-
-        if (myStatus)
-            printf("Status: %ld\n", (long) myStatus);
-
-        result = myStatus;
+        result = ret0 + ret1 + ret2;
 #endif
     }
 
     return result;
 }
+
+#pragma GCC diagnostic pop

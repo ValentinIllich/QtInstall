@@ -5,9 +5,8 @@
 #include <QFileInfo>
 #include <QStringList>
 #include <QDir>
-#include <QSettings>
 
-#include "../utilities.h" // dbgout()
+#include "../backup/Utilities.h" // dbgout()
 
 QString DatagramFileHandler::m_applicationPath = "/Applications";
 static bool m_debugMode = false;
@@ -30,15 +29,12 @@ int DatagramFileHandler::getPropertiesFromString(QString const &str)
 
 QString packetRegistration(int sharedRegistrationCommand,QString const &destination,QString const &packageID)
 {
-  QCoreApplication::setOrganizationName("VISolutions.de");
-  QCoreApplication::setApplicationName("QtInstallFiles");
-
-  QSettings sett;
+  installSettings sett;
 
   QString searchKey = destination;
   searchKey.replace("/",":");
 
-  QString packetUsingThis = sett.value(searchKey).toString();
+  QString packetUsingThis = sett.value(searchKey,"");
   QString retval;
 
   switch(sharedRegistrationCommand)
@@ -50,14 +46,14 @@ QString packetRegistration(int sharedRegistrationCommand,QString const &destinat
     retval = packetUsingThis;
     if( !packetUsingThis.contains(packageID) )
     {
-      packetUsingThis.append(packageID+";");
+      packetUsingThis = packetUsingThis.append(packageID+";");
       sett.setValue(searchKey,packetUsingThis);
     }
     break;
   case removePackageID:
     if( packetUsingThis.contains(packageID) )
     {
-      packetUsingThis.remove(packageID+";");
+      packetUsingThis = packetUsingThis.remove(packageID+";");
       if( packetUsingThis.isEmpty() )
         sett.remove(searchKey);
       else
@@ -96,10 +92,15 @@ bool DatagramFileHandler::processFile(QString const &packageID,QString const &pr
     {
       QString registeredPackages = packetRegistration(checkPackageID,filename,packageID);
 
-      if( !registeredPackages.contains(packageID) )
+      if( registeredPackages.isEmpty() )
+        // fiel does not come from QtInstall
         dbgout(QString("    --> not touching, file already exists: '")+filename+"', file size is "+QString::number(fi.size()),1);
-      else if( lastModified>fi.lastModified() )
-        copyIt = true;
+      else
+      {
+        packetRegistration(insertPackageID,filename,packageID);
+        if( lastModified>fi.lastModified() )
+          copyIt = true;
+      }
     }
     else
     {
@@ -192,7 +193,7 @@ bool DatagramFileHandler::processUndo(QString const &packageID,QString const &de
 
   if( !packetRegistration(removePackageID,destination,packageID).isEmpty() )
   {
-    dbgout(QString("    --> file in use by ther packages: not removing '")+destination+"'",1);
+    dbgout(QString("    --> file in use by other packages: not removing '")+destination+"'",1);
     return false;
   }
 

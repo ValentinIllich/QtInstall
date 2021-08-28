@@ -22,3 +22,29 @@ coming up in the future:
 - setup components
 
 Please refer to ReleaseNotes.txt
+
+
+
+################
+
+Static installation of QT 5.12
+
+- download src archive 
+- cd in source directory
+
+
+Windows:
+========
+
+configure -prefix %CD%\qtbase -release -static -static-runtime -accessibility -no-icu -no-sql-sqlite -no-qml-debug -no-opengl -nomake examples -nomake tests
+
+nmake (or 'mingw32-make') module-qtbase module-qtdeclarative module-qttools module-qttranslations module-qtwinextras
+
+
+
+Mac: (QT 5.12.11)
+=================
+
+./configure -prefix $PWD/qtbase -release -static -no-securetransport -accessibility -qt-zlib -qt-libpng -qt-libjpeg -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype
+
+make module-qtbase module-qtdeclarative module-qttools module-qttranslations

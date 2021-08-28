@@ -2,9 +2,10 @@
 #include "datacabinet.h"
 #include "pathmanagement.h"
 
-#include <qtgui>
+#include <QtGui>
+#include <QVBoxLayout>
 
-#include "../utilities.h"
+#include "../backup/Utilities.h" // dbgout()
 
 CompletePage::CompletePage(DataCabinet *cab)
     : m_cabinet(cab)

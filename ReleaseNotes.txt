@@ -1,5 +1,11 @@
 QtInstall Release Notes (C) Valentin Illich 2009-2013
 
+Release 2.0:
+============
+
+- now compiling with QT 5.12 static
+- fixing problems with new admin authentifiaction on Mac OS
+
 Release 1.8:
 ============
 
