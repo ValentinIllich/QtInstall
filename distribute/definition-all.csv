@@ -1,0 +1,19 @@
+WindowTitle;Welcome Text (File);Completion Text (File);Lic Text File;Component(s);
+VISolutions QtInstall V1.0;This package installs the complete project for the VISolutions QtInstall tool. The application will be installed in the programs folder, the sources will be intalled in the home directory of the current user.;The src package is now ready to use. Thank you for your interest in VISolutions QtInstall!;;;
+Item Type;Source Path;Destination Path;Atrributes;Component(s);Target
+#;;;;;
+f;../QtInstall.app/Contents/Info.plist;<APPDIR>/QtInstall.app/Contents/Info.plist;;;mac
+f;../QtInstall.app/Contents/PkgInfo;<APPDIR>/QtInstall.app/Contents/PkgInfo;;;mac
+f;../QtInstall.app/Contents/MacOS/QtInstall;<APPDIR>/QtInstall.app/Contents/MacOS/QtInstall;exec;;mac
+f;../QtInstall.app/Contents/Resources/empty.lproj;<APPDIR>/QtInstall.app/Contents/Resources/empty.lproj;;;mac
+#;;;;;
+f;QtInstall.exe;<APPDIR>/QtInstall.exe;;;win32
+fr;;<APPDIR>/QtInstall.pdf;;;
+#;;;;;
+#;########## installing sources ##########;;;;
+#;;;;;
+p;../QtInstall.pro;<HOME>/QtInstall;;;
+#;;;;;
+#;########## creating startup link ##########;;;;
+lcd;;<APPDIR>/QtInstall.app;;;mac
+lcd;QtInstall.ico;<APPDIR>/QtInstall.exe;;;win32

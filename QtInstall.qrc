@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/helperApps" >
+        <file alias="InstallDriver.exe" >ressources/InstallDriver.exe</file>
+        <file alias="SSLoginItems.bin" >ressources/SSLoginItems.bin</file>
+    </qresource>
+    <qresource prefix="/documentation" >
+        <file alias="QtInstall.pdf" >ressources/QtInstall.pdf</file>
+    </qresource>
+</RCC>
