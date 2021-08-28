@@ -1,0 +1,24 @@
+QtInstall Release Notes (C) Valentin Illich 2009
+
+Release 1.5:
+============
+
+- now supporting embedded installers where the package data is included within the installer itself
+
+Release 1.0:
+============
+
+- added compression for file data in cabinet files
+- show QtInstall license upon first startup
+
+Release 0.9:
+============
+
+- added support for Windows: setting search path for DLLs
+- added auto start and desktop links mechanism
+
+Release 0.5:
+============
+
+- added QSettings support
+- writing documentation

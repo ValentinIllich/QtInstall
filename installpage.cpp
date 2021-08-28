@@ -2,6 +2,8 @@
 
 #include <qtgui>
 
+#include "../utilities.h" // dbgout()
+
 InstallPage::InstallPage(DataCabinet *cab)
     : m_cabinet(cab)
 {
@@ -22,7 +24,7 @@ InstallPage::InstallPage(DataCabinet *cab)
 
 void InstallPage::setProgress(int progress)
 {
-    dbgout(QString("progress=")+QString::number(progress));
+    dbgout(QString("...progress=")+QString::number(progress));
     m_bar->setValue(progress);
     qApp->processEvents();
 }

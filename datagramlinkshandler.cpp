@@ -8,21 +8,22 @@
 
 #include <QmessageBox>
 
+#include "../utilities.h"
+
 #define MACDESKTOP      "<HOMEDIR>/Desktop"
 
-void DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties,QString const &target,QString const &iconfile,int attributes)
+bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties,QString const &target,QString const &iconfile,int attributes)
 {
     QString destination = PathManagement::replaceSymbolicNames(target);
+    QString icon = PathManagement::replaceSymbolicNames(iconfile);
 	QFileInfo info(destination);
     QString appname = QDir::tempPath() + "/helperapp";
     QString linkPath;
     QStringList args;
     bool useHelperApp = false;
+    bool error = false;
 
     dbgout(QString("--- processing link '")+destination+"' with helper '"+appname+"'");
-
-    QProcess *proc = new QProcess(0);
-    QObject::connect(proc, SIGNAL(finished(int)), proc, SLOT(deleteLater()));
 
     switch( cmd )
     {
@@ -36,7 +37,7 @@ void DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
                 args.append("-createLink");
                 args.append(destination);
                 args.append(linkPath+"/"+info.baseName()+".lnk"); // linkfile
-                args.append(info.dir().path()+"/"+iconfile); // icon
+                args.append(/*info.dir().path()+"/"+*/icon); // icon
                 args.append(info.dir().path()); // working dir
             }
             #endif
@@ -73,7 +74,7 @@ void DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
                 args.append("-createLink");
                 args.append(destination);
                 args.append(linkPath+"/"+info.baseName()+".lnk"); // linkfile
-                args.append(info.dir().path()+"/"+iconfile); // icon
+                args.append(/*info.dir().path()+"/"+*/icon); // icon
                 args.append(info.dir().path()); // working dir
             }
             #endif
@@ -81,11 +82,16 @@ void DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
             {
                 linkPath = PathManagement::replaceSymbolicNames(MACDESKTOP);
                 QFileInfo info(destination);
-                appname = "/bin/ln";
-                args.append("-s");
-                args.append("-f");
-                args.append(destination);
-                args.append(linkPath+"/"+info.fileName());
+                if( QFile::exists(linkPath+"/"+info.fileName()) )
+                    appname ="";
+                else
+                {
+                    appname = "/bin/ln";
+                    args.append("-s");
+                    args.append("-f");
+                    args.append(destination);
+                    args.append(linkPath+"/"+info.fileName());
+                }
             }
             #endif
             break;
@@ -105,8 +111,13 @@ void DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
             {
                 linkPath = PathManagement::replaceSymbolicNames(MACDESKTOP);
                 QFileInfo info(destination);
-                appname = "/bin/rm";
-                args.append(linkPath+"/"+info.fileName());
+                if( QFile::exists(linkPath+"/"+info.fileName()) )
+                {
+                    appname = "/bin/rm";
+                    args.append(linkPath+"/"+info.fileName());
+                }
+                else
+                    appname = "";
             }
             #endif
             break;
@@ -116,33 +127,43 @@ void DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
     {
         #if defined(Q_OS_WIN32)
             appname = QDir::tempPath() + "/helperapp.exe";
-            if( !QFile::copy(":/helperApps/InstallDriver.exe",appname) )
+            if( !QFile::copy(":/helperApps/InstallHelper.exe",appname) )
                 dbgout("### cannot create helper application!");
         #endif
         #if defined(Q_OS_MAC)
             appname = QDir::tempPath() + "/helperapp";
             if( !QFile::copy(":/helperApps/SSLoginItems.bin",appname) )
-                dbgout("### cannot create helper application!");
+                error = dbgout("### cannot create helper application!");
         #endif
         if( !QFile::setPermissions(appname,	QFile::ReadOwner|QFile::ReadUser|QFile::ReadGroup|QFile::ReadOther|
                                                 QFile::WriteOwner|QFile::WriteOwner|QFile::WriteOwner|QFile::WriteOwner|
                                                 QFile::ExeOwner|QFile::ExeUser|QFile::ExeGroup|QFile::ExeOther) )
-            dbgout("### permissions error on helper application!");
+           error =  dbgout("### permissions error on helper application!");
     }
 
-    proc->start(appname, args);
-    proc->waitForFinished();
-    dbgout(QString("... code, stat=")+QString::number(proc->exitCode())+"/"+QString::number(proc->exitStatus()));
-    //Mac: code!=0 Fehler!
-
-    if( proc->exitCode()!=0 )
-        dbgout("### helper application returned error!");
-
-    delete proc;
-
-    if( useHelperApp )
+    if( !appname.isEmpty() )
     {
-        if( !QFile::remove(appname) )
-            dbgout(QString("### cannot delete application ")+appname);
+        QProcess *proc = new QProcess(0);
+        QObject::connect(proc, SIGNAL(finished(int)), proc, SLOT(deleteLater()));
+
+        proc->start(appname, args);
+        proc->waitForFinished();
+        dbgout(QString("... code, stat=")+QString::number(proc->exitCode())+"/"+QString::number(proc->exitStatus()));
+        //Mac: code!=0 Fehler!
+
+        if( proc->exitCode()!=0 )
+            error = dbgout("### helper application returned error!");
+
+        delete proc;
+
+        if( useHelperApp )
+        {
+            if( !QFile::remove(appname) )
+                error = dbgout(QString("### cannot delete helper application ")+appname);
+        }
     }
+    else
+        dbgout("...nothing to do.");
+
+    return error;
 }

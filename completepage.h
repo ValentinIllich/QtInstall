@@ -1,5 +1,5 @@
-#ifndef WELCOMEPAGE_H
-#define WELCOMEPAGE_H
+#ifndef COMPLETEPAGE_H
+#define COMPLETEPAGE_H
 
 #include <QWizardPage>
 #include <QLabel>
@@ -8,10 +8,10 @@
 
 #include "datacabinet.h"
 
-class WelcomePage : public QWizardPage
+class CompletePage : public QWizardPage
 {
 public:
-    WelcomePage(DataCabinet *cab);
+    CompletePage(DataCabinet *cab);
 
     virtual void initializePage();
     virtual bool validatePage();
@@ -20,7 +20,6 @@ private:
     DataCabinet *m_cabinet;
 
     QLabel *m_label;
-    QTextEdit *m_edit;
 };
 
-#endif // WELCOMEPAGE_H
+#endif // COMPLETEPAGE_H

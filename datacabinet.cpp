@@ -7,6 +7,9 @@
 #include <QDateTime>
 #include <QPlainTextEdit>
 #include <QApplication>
+#include <QMessageBox>
+
+#include "../utilities.h"
 
 DataCabinet::DataCabinet()
 : m_iLastElement(0)
@@ -28,13 +31,16 @@ QString const &DataCabinet::getProperty(PropertyID ID)
     return m_properties.at(ID);
 }
 
-bool DataCabinet::openFile(QString const &filename)
+bool DataCabinet::openFile(QString const &filename,int fileOffset)
 {
     m_iLastElement = -1;
 
     m_file.setFileName(filename);
     if( m_file.open(QIODevice::ReadOnly) )
     {
+        if( fileOffset>0 )
+            m_file.seek(fileOffset);
+
         cabinetMagic myCabinetMagic;
 
         m_file.read((char*)&myCabinetMagic,sizeof(myCabinetMagic));
@@ -43,13 +49,13 @@ bool DataCabinet::openFile(QString const &filename)
 
         if( ret && myCabinetMagic.magic!='VISL' )
         {
-            dbgout("++++ this cab file seems not to be a QtInstall package (magic wrong)!");
+            error("### this .qip file seems not to be a QtInstall package (magic wrong)!");
             ret = false;
         }
 
         if( ret && myCabinetMagic.version!=1001001 )
         {
-            dbgout("++++ this cab file seems not to be a QtInstall package (version wrong)!");
+            error("### this .qip file seems not to be a QtInstall package (version wrong)!");
             ret = false;
         }
 
@@ -75,7 +81,7 @@ bool DataCabinet::openFile(QString const &filename)
     }
     else
     {
-        dbgout("++++ this cab file seems not to be a QtInstall package (open failed)!");
+        error("### cannot open this .qip file!");
         return false;
     }
 }
@@ -100,7 +106,10 @@ bool DataCabinet::createFile(QString const &filename)
         return true;
     }
     else
+	{
+		error("### could not create the QtInstall package!");
         return false;
+	}
 }
 
 void DataCabinet::closeFile()
@@ -143,15 +152,15 @@ bool DataCabinet::scanFile()
         {
             case dataFileDatagram:
                 dbgout("+++ found dataFileDatagram");
-                scanFileDatagram(m_file,myCabinetHeader.attributes);
+                m_error = m_error | scanFileDatagram(m_file,myCabinetHeader.attributes);
                 break;
             case settingsDatagram:
                 dbgout("+++ found dataSettingsDatagram");
-                scanSettingsDatagram(m_file,myCabinetHeader.attributes);
+                m_error = m_error | scanSettingsDatagram(m_file,myCabinetHeader.attributes);
                 break;
            case linksDatagram:
                 dbgout("+++ found linksDatagram");
-                scanLinksDatagram(m_file,myCabinetHeader.attributes);
+                m_error = m_error | scanLinksDatagram(m_file,myCabinetHeader.attributes);
                 break;
             default:
                 m_file.seek(m_file.pos()+myCabinetHeader.dataLength);
@@ -167,7 +176,7 @@ bool DataCabinet::scanFile()
 
     return true;
 }
-void DataCabinet::scanFileDatagram(QFile &fileptr,int attributes)
+bool DataCabinet::scanFileDatagram(QFile &fileptr,int attributes)
 {
     fileDataHeader myFileDataHeader;
 
@@ -187,10 +196,10 @@ void DataCabinet::scanFileDatagram(QFile &fileptr,int attributes)
     if( size>0 )
         data = fileptr.read(size);
 
-    dbgout(QString("    destination='")+destination+"', lastModified='"+modified.toString()+"', attributes='"+QString::number(attributes)+"', filesize="+QString::number(size)+" bytes");
-    DatagramFileHandler::processFile(properties,destination,modified,attributes,myFileDataHeader.filePermissions,data);
+    dbgout(QString("    destination='")+destination+"', lastModified='"+modified.toString()+"', attributes='"+QString::number(attributes)+"', compressed size="+QString::number(size)+" bytes");
+    return DatagramFileHandler::processFile(properties,destination,modified,attributes,myFileDataHeader.filePermissions,data);
 }
-void DataCabinet::scanSettingsDatagram(QFile &fileptr,int attributes)
+bool DataCabinet::scanSettingsDatagram(QFile &fileptr,int attributes)
 {
     settingsDataHeader mySettingsDataHeader;
 
@@ -205,9 +214,9 @@ void DataCabinet::scanSettingsDatagram(QFile &fileptr,int attributes)
     QString value = fileptr.read(valueLength);;
 
     dbgout(QString("    key='")+key+"', value='"+value+"', attributes='"+QString::number(attributes)+"'");
-    DatagramSettingsHandler::processSetting(key,properties,attributes,value);
+    return DatagramSettingsHandler::processSetting(key,properties,attributes,value);
 }
-void DataCabinet::scanLinksDatagram(QFile &fileptr,int attributes)
+bool DataCabinet::scanLinksDatagram(QFile &fileptr,int attributes)
 {
     linksDataHeader myLinksDataHeader;
 
@@ -220,8 +229,7 @@ void DataCabinet::scanLinksDatagram(QFile &fileptr,int attributes)
     int iconFileLength = myLinksDataHeader.iconFileLength;
     QString iconFile = fileptr.read(iconFileLength);
 
-    DatagramLinksHandler::processLink((DatagramLinksHandler::linkCommand)myLinksDataHeader.operation,properties,target,iconFile,attributes);
-    m_error = true;
+    return DatagramLinksHandler::processLink((DatagramLinksHandler::linkCommand)myLinksDataHeader.operation,properties,target,iconFile,attributes);
 }
 
 bool DataCabinet::hasError()
@@ -233,6 +241,7 @@ void DataCabinet::appendFileDatagram(QString const &srcFilename,QString const &d
 {
     cabinetHeader myCabinetHeader;
     fileDataHeader myFileDataHeader;
+    QByteArray compressed;
 
     QFile file(srcFilename);
     if( file.open(QIODevice::ReadOnly) || attributes==removeDestination )
@@ -249,8 +258,10 @@ void DataCabinet::appendFileDatagram(QString const &srcFilename,QString const &d
         {
             QFileInfo info(srcFilename);
 
+            compressed = qCompress(file.readAll());
+
             myFileDataHeader.destinationLength = dstFilename.length();
-            myFileDataHeader.dataLength = file.size();
+            myFileDataHeader.dataLength = compressed.size();
             myFileDataHeader.propertiesLength = properties.length();
             myFileDataHeader.lastModified = info.lastModified().toTime_t();
             myFileDataHeader.filePermissions = file.permissions();
@@ -267,17 +278,17 @@ void DataCabinet::appendFileDatagram(QString const &srcFilename,QString const &d
 
         if( attributes!=removeDestination )
         {
-            m_file.write(file.readAll(),myFileDataHeader.dataLength);
+            m_file.write(compressed,myFileDataHeader.dataLength);
             file.close();
         }
 
-        dbgout(QString("+++ appendFileDatagram with destination '")+dstFilename+"', size "+
+        dbgout(QString("+++ appendFileDatagram with destination '")+dstFilename+"', original size "+QString::number(file.size())+", size "+
                     QString::number(myFileDataHeader.dataLength)+" bytes, attributes "+QString::number(attributes));
 
         m_iLastElement++;
     }
     else
-        dbgout(QString("### source file '")+srcFilename+"' not found!");
+        error(QString("### source file '")+srcFilename+"' not found!");
 }
 
 void DataCabinet::appendSettingsDatagram(QString const &key,QString const &value,QString const &properties,int attributes)
@@ -329,45 +340,4 @@ void DataCabinet::appendLinksDatagram(int linkCommand,QString const &target,QStr
                 iconfile+"', attributes "+QString::number(attributes));
 
     m_iLastElement++;
-}
-
-static QPlainTextEdit *window = NULL;
-static bool visible = false;
-
-bool dbgVisible(bool showWindow)
-{
-    if( showWindow )
-        visible = true;
-
-    if( visible && window )
-    {
-        window->show();
-        window->activateWindow();
-    }
-
-    return visible;
-}
-void dbgout( QString const &text )
-{
-    if( window==NULL )
-    {
-        window = new QPlainTextEdit(0);
-        window->setFont(QFont("Courier",12));
-        window->setGeometry(50,50,800,300);
-        window->setLineWrapMode(QPlainTextEdit::NoWrap);
-
-        if( visible )
-        {
-            window->show();
-            window->activateWindow();
-        }
-    }
-
-    window->appendPlainText(text);
-    QTextCursor newCursor(window->document());
-    newCursor.movePosition(QTextCursor::End);
-    window->setTextCursor(newCursor);
-    newCursor.movePosition(QTextCursor::StartOfLine);
-    window->setTextCursor(newCursor);
-    qApp->processEvents();
 }

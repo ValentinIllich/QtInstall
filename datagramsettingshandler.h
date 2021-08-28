@@ -7,7 +7,7 @@
 class DatagramSettingsHandler
 {
 public:
-    static void processSetting(QString const &key,QString const &properties,int attributes,QString const &value);
+    static bool processSetting(QString const &key,QString const &properties,int attributes,QString const &value);
 };
 
 #endif // DATAGRAMSETTINGSHANDLER_H

@@ -1,10 +1,12 @@
 #include "datagramfilehandler.h"
-#include "datacabinet.h" // dbgout()
+#include "datacabinet.h"
 #include "pathmanagement.h"
 
 #include <QFileInfo>
 #include <QStringList>
 #include <QDir>
+
+#include "../utilities.h" // dbgout()
 
 QString DatagramFileHandler::m_applicationPath = "/Applications";
 
@@ -24,14 +26,16 @@ int DatagramFileHandler::getPropertiesFromString(QString const &str)
 
 /******************************************************/
 
-void DatagramFileHandler::processFile(QString const &properties,QString const &destination,QDateTime const &lastModified,int attributes,int filePermissions,QByteArray const &data)
+bool DatagramFileHandler::processFile(QString const &properties,QString const &destination,QDateTime const &lastModified,int attributes,int filePermissions,QByteArray const &data)
 {
     dbgout(QString("--- processing file '")+destination+"'");
 
     QString filename = destination;
     bool copyIt = false;
+    bool error = false;
+    bool needsAdmin = false;
 
-    filename = PathManagement::replaceSymbolicNames(filename);
+    filename = PathManagement::replaceSymbolicNames(filename,&needsAdmin);
 
     if( attributes==removeDestination )
     {
@@ -48,31 +52,41 @@ void DatagramFileHandler::processFile(QString const &properties,QString const &d
         }
         else
         {
-            QStringList pathtree = filename.split("/");
-            QString actualPath = pathtree.at(0); // the first given directory must exist here!
-            for( int i=1; i<pathtree.count()-1; i++ )
+            bool skip = false;
+            if( needsAdmin && !PathManagement::hasAdminAcces() )
+                skip = true;
+
+            if( skip )
+                error = dbgout("### copying of file requires admin rights!");
+            else
             {
-                QString testDir = actualPath+"/"+pathtree.at(i);
-
-                dbgout(QString("    trying dir '")+testDir+"'...");
-
-                QDir dir(testDir);
-                if( !dir.exists() )
+                QStringList pathtree = filename.split("/");
+                QString actualPath = pathtree.at(0); // the first given directory must exist here!
+                for( int i=1; i<pathtree.count()-1; i++ )
                 {
-                    dbgout("    ... not existant, creating it...");
-                    if( !QDir(actualPath).mkdir(pathtree.at(i)) )
-                        dbgout(QString("### can't create directory ")+actualPath+"/"+pathtree.at(i)); // error!
-                }
-                actualPath = testDir;
-            }
+                    QString testDir = actualPath+"/"+pathtree.at(i);
 
-            copyIt = true;
+                    dbgout(QString("    trying dir '")+testDir+"'...");
+
+                    QDir dir(testDir);
+                    if( !dir.exists() )
+                    {
+                        dbgout("    ... not existant, creating it...");
+                        if( !QDir(actualPath).mkdir(pathtree.at(i)) )
+                            error = dbgout(QString("### can't create directory ")+actualPath+"/"+pathtree.at(i)); // error!
+                    }
+                    actualPath = testDir;
+                }
+
+                copyIt = true;
+            }
         }
     }
 
     if( copyIt )
     {
-        dbgout(QString("    --> now copying data of file '")+filename+"'.");
+        QByteArray uncompressed = qUncompress(data);
+        dbgout(QString("    --> now copying data of file '")+filename+"', file size is "+QString::number(uncompressed.size()));
         QFile file(filename);
         if( file.open(QIODevice::WriteOnly) )
         {
@@ -85,12 +99,14 @@ void DatagramFileHandler::processFile(QString const &properties,QString const &d
                 QFile::Permissions actual = file.permissions();
                 file.setPermissions(actual | QFile::ExeOwner | QFile::ExeUser | QFile::ExeGroup | QFile::ExeOther);
             }
-            file.write(data);
+            file.write(uncompressed);
             file.close();
         }
         else
-           dbgout(QString("### can't open destintion file!")+filename); //error!
+           error = dbgout(QString("### can't open destintion file!")+filename); //error!
     }
     else
         dbgout("    --> nothing to do.");
+
+    return error;
 }

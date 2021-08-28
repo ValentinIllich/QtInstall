@@ -3,7 +3,6 @@
 # -------------------------------------------------
 TARGET = QtInstall
 TEMPLATE = app
-
 SOURCES += main.cpp \
     wizard.cpp \
     welcomepage.cpp \
@@ -12,7 +11,10 @@ SOURCES += main.cpp \
     datagramsettingshandler.cpp \
     installpage.cpp \
     pathmanagement.cpp \
-    datagramlinkshandler.cpp
+    datagramlinkshandler.cpp \
+    licensepage.cpp \
+    completepage.cpp \
+    ../utilities.cpp
 HEADERS += wizard.h \
     welcomepage.h \
     datacabinet.h \
@@ -20,23 +22,32 @@ HEADERS += wizard.h \
     datagramsettingshandler.h \
     installpage.h \
     pathmanagement.h \
-    datagramlinkshandler.h
+    datagramlinkshandler.h \
+    licensepage.h \
+    completepage.h \
+    ../utilities.h
 RESOURCES += QtInstall.qrc
 OTHER_FILES += definition.csv \
-    welcome.html
+    welcome.html \
+    ressources/readme.txt \
+    ressources/license.txt \
+    LICENSE.html \
+    ReleaseNotes.txt
 FORMS += 
-
-MOC_DIR = ./tmp
-UI_DIR = ./tmp
-OBJECTS_DIR = ./tmp
-RCC_DIR = ./tmp
-
-CONFIG -= exceptions
-
-win32 {
-   RC_FILE      = ressources/QtInstall.rc
+win32 { 
+    MOC_DIR = c:/tmp/qtinstall_obj
+    UI_DIR = c:/tmp/qtinstall_obj
+    OBJECTS_DIR = c:/tmp/qtinstall_obj
+    RCC_DIR = c:/tmp/qtinstall_obj
+    RC_FILE = ressources/QtInstall.rc
 }
-mac {
+macx { 
+    QMAKE_MAKEFILE=MacMakefile
+    MOC_DIR = /var/tmp/qtinstall_obj
+    UI_DIR = /var/tmp/qtinstall_obj
+    OBJECTS_DIR = /var/tmp/qtinstall_obj
+    RCC_DIR = /var/tmp/qtinstall_obj
     ICON = ressources/QtInstall.icns
     QMAKE_INFO_PLIST = ressources/Info_mac.plist
 }
+CONFIG -= exceptions

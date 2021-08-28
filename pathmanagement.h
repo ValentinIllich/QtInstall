@@ -16,8 +16,10 @@ public:
     static QString getHomeDir();
     static QString getAppDataDir();
 
-    static QString replaceSymbolicNames(QString const &path);
+    static QString replaceSymbolicNames(QString const &path,bool *needsAdminAccess = NULL);
     static QStringList getSymbolicPathNames();
+
+    static bool hasAdminAcces();
 
 private:
     static QStringList symbolicNames;
@@ -26,6 +28,8 @@ private:
     static QString m_systemDir;
     static QString m_HomeDir;
     static QString m_applicationsData;
+
+    static bool m_hasAccess;
 };
 
 #endif // PATHMANAGEMENT_H

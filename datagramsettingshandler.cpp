@@ -1,11 +1,13 @@
 #include "datagramsettingshandler.h"
 #include "pathmanagement.h"
-#include "datacabinet.h" // dbgout()
+#include "datacabinet.h"
 
 #include <QSettings>
 #include <QCoreApplication>
 
-void DatagramSettingsHandler::processSetting(QString const &key,QString const &properties,int attributes,QString const &value)
+#include "../utilities.h" // dbgout()
+
+bool DatagramSettingsHandler::processSetting(QString const &key,QString const &properties,int attributes,QString const &value)
 {
     if( attributes==settingsAppAndOrgName )
     {
@@ -49,4 +51,6 @@ void DatagramSettingsHandler::processSetting(QString const &key,QString const &p
             sett.setValue(myKey,myValue);
         }
     }
+
+    return false;
 }

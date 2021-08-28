@@ -14,7 +14,7 @@ public:
         eRemoveDesktopLink
     };
 
-    static void processLink(linkCommand cmd,QString const &properties,QString const &target,QString const &iconfile,int attributes);
+    static bool processLink(linkCommand cmd,QString const &properties,QString const &target,QString const &iconfile,int attributes);
 };
 
 #endif // DATAGRAMLINKSHANDLER_H

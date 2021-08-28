@@ -1,5 +1,5 @@
-#ifndef WELCOMEPAGE_H
-#define WELCOMEPAGE_H
+#ifndef LICENSEPAGE_H
+#define LICENSEPAGE_H
 
 #include <QWizardPage>
 #include <QLabel>
@@ -8,19 +8,23 @@
 
 #include "datacabinet.h"
 
-class WelcomePage : public QWizardPage
+class LicensePage : public QWizardPage
 {
 public:
-    WelcomePage(DataCabinet *cab);
+    LicensePage();
+    LicensePage(DataCabinet *cab);
 
     virtual void initializePage();
     virtual bool validatePage();
 
 private:
+    void construct();
     DataCabinet *m_cabinet;
 
-    QLabel *m_label;
     QTextEdit *m_edit;
+    QCheckBox *m_check;
+
+    bool m_ownLicense;
 };
 
-#endif // WELCOMEPAGE_H
+#endif // LICENSEPAGE_H
