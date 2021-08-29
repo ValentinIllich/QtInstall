@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/helperApps">
         <file alias="InstallHelper.exe">ressources/InstallHelper.exe</file>
-        <file alias="SSLoginItems.bin">ressources/SSLoginItems.bin</file>
         <file alias="makealias.sh">ressources/makealias.sh</file>
         <file alias="makestartup.sh">ressources/makestartup.sh</file>
         <file alias="removealias.sh">ressources/removealias.sh</file>
