@@ -140,18 +140,29 @@ bool DatagramLinksHandler::processLink(linkCommand cmd,QString const &properties
 
     if( !appname.isEmpty() )
     {
-        QProcess *proc = new QProcess(0);
-        QObject::connect(proc, SIGNAL(finished(int)), proc, SLOT(deleteLater()));
+        if( m_debugMode )
+        {
+            dbgout("calling "+appname+" "+args.join(" "),0);
+        }
+        else
+        {
+            QProcess *proc = new QProcess(0);
+            QObject::connect(proc, SIGNAL(finished(int)), proc, SLOT(deleteLater()));
 
-        proc->start(appname, args);
-        proc->waitForFinished();
-        dbgout(QString("... code, stat=")+QString::number(proc->exitCode())+"/"+QString::number(proc->exitStatus()),2);
-        //Mac: code!=0 Fehler!
+            proc->start(appname, args);
+            proc->waitForFinished();
+            dbgout(QString("... code, stat=")+QString::number(proc->exitCode())+"/"+QString::number(proc->exitStatus()),2);
+            //Mac: code!=0 Fehler!
 
-        if( proc->exitCode()!=0 )
-            error = dbgout("### helper application returned error!",0);
+            if( proc->exitCode()!=0 )
+            {
+                error = dbgout("### helper application returned error!",0);
+                dbgout(proc->readAllStandardOutput(),0);
+                dbgout(proc->readAllStandardError(),0);
+            }
 
-        delete proc;
+            delete proc;
+        }
 
         if( useHelperApp )
         {
