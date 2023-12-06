@@ -2,3 +2,4 @@
 /QtInstallMac.pro.user
 /QtInstallWin.pro.user
 *.qip
+*.user
